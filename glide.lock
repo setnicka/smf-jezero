@@ -1,0 +1,22 @@
+hash: 435db435b0ed543bff439230ac0f6eea54a7801910b35dc65797dd026db0ac24
+updated: 2018-06-26T15:39:26.120256404+02:00
+imports:
+- name: github.com/coreos/go-log
+  version: b22fd89e1882702b3ba97bc792ca6b45e7e6b635
+  subpackages:
+  - log
+- name: github.com/coreos/go-systemd
+  version: d2196463941895ee908e13531a23a39feb9e1243
+  subpackages:
+  - journal
+- name: github.com/gorilla/context
+  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
+- name: github.com/gorilla/mux
+  version: cb4698366aa625048f3b815af6a0dea8aef9280a
+- name: github.com/gorilla/securecookie
+  version: 78f3d318a8bf316cda921f25e96fd0b441c5173d
+- name: github.com/gorilla/sessions
+  version: 03b6f63cc43ef9c7240a635a5e22b13180e822b8
+- name: github.com/kardianos/osext
+  version: ae77be60afb1dcacde03767a8c37337fad28ac14
+testImports: []
