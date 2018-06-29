@@ -37,6 +37,10 @@ func Init() *State {
 		}
 	}
 
+	if len(state.Rounds) == 0 {
+		state.InitGame()
+	}
+
 	return state
 }
 

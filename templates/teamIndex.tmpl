@@ -1,0 +1,69 @@
+{{ define "teamIndex" }}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ .Title }}</title>
+  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="/static/css/funkyradio.css">
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+  <!--<meta http-equiv="refresh" content="5">-->
+</head>
+<body>
+<style type="text/css" media="screen">
+#roundNumber {
+text-align: center;
+font-style: italic;
+color: #777777;
+margin-top: -5px;
+margin-bottom: 5px;
+}
+</style>
+<div class="col-md-4" style="border: 0px;">
+
+<h1 style="text-align: center;">Stav: {{.GlobalState}}</h1>
+<div id="roundNumber">Kolo: {{.RoundNumber}}</div>
+
+<div class="input-group">
+  <span class="input-group-addon"><b>Peněz:</b></span>
+  <input type="text" class="form-control" value="{{.Money}}" disabled style="font-weight: bold; text-align: right;">
+  <span class="input-group-addon">$</span>
+</div>
+
+{{if .GameMessage}}<div id="gameMessage">{{.GameMessage}}</div>{{end}}
+
+<h2>Akce</h2>
+{{ template "part_messageBox" . }}
+<form method="post">
+	<div class="funkyradio">
+		{{$selectedAction := .SelectedAction}}
+		{{range $id, $action := .Actions}}
+			<div class="funkyradio-primary">
+				<input type="radio" id="radio{{$id}}" name="setAction" value="{{$id}}" {{if eq $selectedAction $id}}checked{{end}}>
+				<label for="radio{{$id}}">{{$action.DisplayName}}</label>
+			</div>
+		{{end}}
+	</div>
+	<center><input type="submit" class="btn btn-primary" value="Zvolit akci"></center>
+</form>
+
+
+
+<h2>Historie kol</h2>
+
+<table class="table table-bordered table-striped" id="history">
+<thead>
+	<tr><th rowspan='2'>Kolo</th><th colspan='2'>Počáteční</th><th rowspan='2'>Akce</th><th colspan='2'>Finální</th><th rowspan='2'>Zpráva</th></tr>
+	<tr><th>Stav</th><th>Peníze</th><th>Stav</th><th>Peníze</th></tr>
+</thead>
+<tbody>
+{{range .History}}
+	<tr><th>{{.RoundNumber}}</th><td>{{.StartState}}</td><td>{{.StartMoney}}</td><th>AKCE</th><td>{{.FinalState}}</td><td>{{.FinalMoney}}</td><td>{{.Message}}</td></tr>
+{{end}}
+</tbody>
+</table>
+
+</div>
+</body>
+</html>
+{{end}}

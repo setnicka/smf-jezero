@@ -5,8 +5,9 @@ import (
 )
 
 type State struct {
-	Teams  []team
-	Rounds []round // Round i = state after i-th round (round 0 = start state)
+	Teams          []team
+	Rounds         []*roundState // Round i = state after i-th round (round 0 = start state)
+	CurrentActions map[string]int
 }
 
 type team struct {
@@ -16,8 +17,27 @@ type team struct {
 	Password string
 }
 
-type round struct {
-	TeamActions map[string]int
+type roundState struct {
+	Number      int
 	GlobalState int
-	TeamMoney   map[string]int
+	Teams       map[string]teamState
+	Time        time.Time
+}
+
+type teamState struct {
+	Action  int
+	Message string
+	Money   int
+}
+
+////////////
+
+type checkFunc func(globalState int, money int) bool
+type actionFunc func(globalState int, money int, actions map[string]int) (int, int, string)
+
+type ActionDef struct {
+	DisplayName  string
+	DisplayClass string
+	check        checkFunc
+	action       actionFunc
 }

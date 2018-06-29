@@ -1,0 +1,37 @@
+{{ define "orgDashboard" }}
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ .Title }}</title>
+  <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css">
+  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+  <meta http-equiv="refresh" content="5">
+</head>
+<body>
+<h1>Dashboard</h1>
+
+{{ template "part_messageBox" . }}
+
+<style type="text/css">
+	#dashboard td{
+		text-align: center;
+	}
+	#dashboard td {
+		opacity: 0.5;
+	}
+	#dashboard td.success {
+		border: 2px solid green;
+		opacity: 1;
+	}
+</style>
+
+<a href="teams">Teams</a>
+<table class="table table-bordered table-striped" id="dashboard">
+<thead>
+
+</thead>
+<tbody>
+
+</tbody>
+</table>
+{{ end }}

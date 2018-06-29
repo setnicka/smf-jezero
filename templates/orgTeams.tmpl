@@ -1,0 +1,39 @@
+{{ define "orgTeams" }}
+{{ template "part_header" . }}
+ <h1>Teams</h1>
+
+{{ template "part_messageBox" . }}
+
+<a href="dashboard">Dashboard</a>
+<table class="table">
+<thead>
+	<tr><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>
+</thead>
+<tbody>
+	{{range $login, $name := .Teams}}
+	<tr>
+		<td>{{$login}}</td><td>{{$name}}</td>
+		<td><form method="post" class="form-inline">
+			<input type="hidden" name="login" value="{{$login}}">
+			<input type="password" name="setPassword" placeholder="New password">
+			<input type="submit" class="btn btn-primary" value="Set password">
+		</form>
+		<td><form method="post" onsubmit="return confirm('Delete the {{$name}} team?');" class="form-inline">
+			<input type="hidden" name="deleteTeam" value="{{$login}}">
+			<input type="submit" class="btn btn-danger" value="Delete team">
+		</form></td>
+		</td>
+	</tr>
+	{{end}}
+</tbody>
+</table>
+
+<h2>Add new team</h2>
+<form method="post" class="form-inline">
+	<input type="text" name="newTeamLogin" placeholder="Login">
+	<input type="text" name="newTeamName" placeholder="Name">
+	<input type="submit" class="btn btn-primary" value="Add new team">
+</form>
+</body>
+</html>
+{{ end }}

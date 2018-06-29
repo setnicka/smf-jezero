@@ -49,7 +49,7 @@ func main() {
 ////////////////////////////////////////////////////////////////////////////////
 
 func newRouter(name string) *mux.Router {
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/start-hry", loginHandler)
 	fs := NoListFileSystem{http.Dir(STATIC_DIR + "/" + name)}
 	global_fs := NoListFileSystem{http.Dir(STATIC_DIR + "/global/" + name)}
@@ -69,13 +69,16 @@ func (s *Server) Start() {
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(fs)))
 
 	// Org handlers
+	router.HandleFunc("/org", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/org/teams", http.StatusSeeOther)
+	})
 	router.HandleFunc("/org/login", orgLoginHandler)
 	router.HandleFunc("/org/teams", authOrg(orgTeamsHandler))
 	router.HandleFunc("/org/dashboard", authOrg(orgDashboardHandler))
 
 	// Teams handlers
 	router.HandleFunc("/login", loginHandler)
-	router.HandleFunc("/", auth(indexHandler))
+	router.HandleFunc("/", auth(teamIndexHandler))
 
 	// 2. Load templates
 	if _, err := server.getTemplates(); err != nil {
