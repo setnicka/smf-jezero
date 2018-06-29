@@ -1,5 +1,5 @@
-hash: 435db435b0ed543bff439230ac0f6eea54a7801910b35dc65797dd026db0ac24
-updated: 2018-06-26T15:39:26.120256404+02:00
+hash: 74fc6a55212a5b80dd7a432eb0906b710e4b6f4d64829ff6e939abef650fd5b8
+updated: 2018-06-27T14:54:41.019537832+02:00
 imports:
 - name: github.com/coreos/go-log
   version: b22fd89e1882702b3ba97bc792ca6b45e7e6b635
@@ -19,4 +19,6 @@ imports:
   version: 03b6f63cc43ef9c7240a635a5e22b13180e822b8
 - name: github.com/kardianos/osext
   version: ae77be60afb1dcacde03767a8c37337fad28ac14
+- name: github.com/pkg/errors
+  version: 645ef00459ed84a119197bfb8d8205042c6df63d
 testImports: []
