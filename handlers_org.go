@@ -84,6 +84,7 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 type orgDashboardData struct {
 	GeneralData
 	Teams          []string
+	RoundNumber    int
 	CurrentState   int
 	CurrentActions []int
 	History        []orgDashboardRoundRecord
@@ -117,8 +118,13 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("resetGame") != "" {
-			setFlashMessage(w, r, FlashMessage{"info", "Hra resetována"})
+			setFlashMessage(w, r, FlashMessage{"success", "Hra resetována"})
 			server.state.InitGame()
+		}
+
+		if r.PostFormValue("sendState") != "" {
+			setFlashMessage(w, r, FlashMessage{"info", "Stav poslán"})
+			server.state.SendState()
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
@@ -131,6 +137,7 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	allTeams := server.state.GetTeams()
 
 	data.AllActions = game.GetActions()
+	data.RoundNumber = server.state.GetRoundNumber()
 	data.CurrentState = server.state.GetCurrentState().GlobalState
 	data.Teams = []string{}
 	data.CurrentActions = []int{}

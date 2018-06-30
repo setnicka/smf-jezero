@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"math"
+	"net"
+	"strconv"
 	"strings"
 	"time"
 
@@ -14,6 +16,8 @@ import (
 // Game mechanic
 
 const (
+	tcp_visualizator = "192.168.42.153:4242"
+
 	// Game constants
 	DEFAULT_GLOBAL_STATE = 100
 	DEFAULT_MONEY        = 100
@@ -80,6 +84,10 @@ func (s *State) GetCurrentState() *roundState {
 	}
 }
 
+func (s *State) GetRoundNumber() int {
+	return s.GetCurrentState().Number + 1 // actual round number = last round number + 1
+}
+
 func (s *State) EndRound() error {
 	// 1. Get previous state
 	previous := s.GetCurrentState()
@@ -94,7 +102,17 @@ func (s *State) EndRound() error {
 	}
 	// 4. Save state
 	s.Save()
+
+	// 5. Send data over TCP
+	s.SendState()
 	return nil
+}
+
+func (s *State) SendState() {
+	if conn, err := net.Dial("tcp", tcp_visualizator); err == nil {
+		fmt.Fprintf(conn, strconv.Itoa(s.GetCurrentState().GlobalState)+"\n")
+		fmt.Fprintf(conn, "k"+strconv.Itoa(s.GetRoundNumber())+"\n")
+	}
 }
 
 func (s *State) calculateRound(previous *roundState, actions map[string]int) *roundState {
