@@ -2,19 +2,17 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	//"github.com/coreos/go-log/log"
+
+	"github.com/setnicka/smf-jezero/game"
 )
 
 func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
-	data := getGeneralData("Orgovský login", r) // Nothing special to add
-	defer func() { executeTemplate(w, "orgLogin", data) }()
-
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			data.MessageType = "danger"
-			data.Message = "Cannot parse login form"
-			return
+			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse login form"})
 		}
 		login := r.PostFormValue("login")
 		password := r.PostFormValue("password")
@@ -24,11 +22,16 @@ func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 			session.Values["org"] = true
 			session.Save(r, w)
 			http.Redirect(w, r, "dashboard", http.StatusSeeOther)
+			return
 		} else {
-			data.MessageType = "info"
-			data.Message = "Nepsrávný login"
+			setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		}
+		http.Redirect(w, r, "login", http.StatusSeeOther)
+		return
 	}
+
+	data := getGeneralData("Orgovský login", w, r) // Nothing special to add
+	executeTemplate(w, "orgLogin", data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,39 +42,36 @@ type orgTeamsData struct {
 }
 
 func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	data := orgTeamsData{GeneralData: getGeneralData("Týmy", r)}
-	defer func() { executeTemplate(w, "orgTeams", data) }()
-
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			data.MessageType = "danger"
-			data.Message = "Cannot parse teams form"
-			return
+			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse teams form"})
 		}
 
 		if r.PostFormValue("deleteTeam") != "" {
 			if team := server.state.GetTeam(r.PostFormValue("deleteTeam")); team != nil {
 				server.state.DeleteTeam(r.PostFormValue("deleteTeam"))
-				data.MessageType = "success"
-				data.Message = "Team deleted"
+				setFlashMessage(w, r, FlashMessage{"success", "Team deleted"})
 			}
 		} else if r.PostFormValue("setPassword") != "" {
 			if team := server.state.GetTeam(r.PostFormValue("login")); team != nil {
 				server.state.TeamSetPassword(r.PostFormValue("login"), r.PostFormValue("setPassword"))
-				data.MessageType = "success"
-				data.Message = "Password set"
+				setFlashMessage(w, r, FlashMessage{"success", "Password set"})
 			}
 		} else if r.PostFormValue("newTeamLogin") != "" {
 			err := server.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"))
 			if err == nil {
-				data.MessageType = "success"
-				data.Message = "Team added"
+				setFlashMessage(w, r, FlashMessage{"success", "Team added"})
 			} else {
-				data.MessageType = "danger"
-				data.Message = fmt.Sprintf("Cannot add team due to error: %v", err)
+
+				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Cannot add team due to error: %v", err)})
 			}
 		}
+		http.Redirect(w, r, "teams", http.StatusSeeOther)
+		return
 	}
+
+	data := orgTeamsData{GeneralData: getGeneralData("Týmy", w, r)}
+	defer func() { executeTemplate(w, "orgTeams", data) }()
 
 	data.Teams = map[string]string{}
 	for _, team := range server.state.GetTeams() {
@@ -81,24 +81,87 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type teamServiceResult struct {
-	Completed     bool
-	CompletedTime string
-	Tries         int
-}
-
-type teamResult struct {
-	Name    string
-	Results []teamServiceResult
-}
-
 type orgDashboardData struct {
 	GeneralData
-	SecretServices []string
-	Teams          []teamResult
+	Teams          []string
+	CurrentState   int
+	CurrentActions []int
+	History        []orgDashboardRoundRecord
+	AllActions     map[int]game.ActionDef
+}
+
+type orgDashboardRoundRecord struct {
+	RoundNumber int
+	StartState  int
+	FinalState  int
+	Teams       []orgDashboardTeamRecord
+}
+
+type orgDashboardTeamRecord struct {
+	StartMoney int
+	Action     int
+	FinalMoney int
+	Message    template.HTML
 }
 
 func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
-	data := orgDashboardData{GeneralData: getGeneralData("Výsledky", r)}
+	if r.Method == http.MethodPost {
+		if err := r.ParseForm(); err != nil {
+			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
+		}
+
+		if r.PostFormValue("calculateRound") != "" {
+			setFlashMessage(w, r, FlashMessage{"succes", "Kolo spočítáno, výsledky níže"})
+			server.state.EndRound()
+		}
+
+		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
+		return
+	}
+
+	data := orgDashboardData{GeneralData: getGeneralData("Org dashboard", w, r)}
 	defer func() { executeTemplate(w, "orgDashboard", data) }()
+
+	allTeams := server.state.GetTeams()
+
+	data.AllActions = game.GetActions()
+	data.CurrentState = server.state.GetCurrentState().GlobalState
+	data.Teams = []string{}
+	data.CurrentActions = []int{}
+	for _, team := range allTeams {
+		data.Teams = append(data.Teams, team.Name)
+		data.CurrentActions = append(data.CurrentActions, server.state.CurrentActions[team.Login])
+	}
+
+	// Construct history records
+	data.History = []orgDashboardRoundRecord{}
+	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
+		currentRound := server.state.Rounds[i]
+		lastRound := server.state.Rounds[i-1]
+
+		record := orgDashboardRoundRecord{
+			RoundNumber: currentRound.Number,
+			StartState:  lastRound.GlobalState,
+			FinalState:  currentRound.GlobalState,
+			Teams:       []orgDashboardTeamRecord{},
+		}
+
+		for _, team := range allTeams {
+			teamRecord := orgDashboardTeamRecord{}
+
+			if teamState, found := currentRound.Teams[team.Login]; found {
+				teamRecord.Action = teamState.Action
+				teamRecord.FinalMoney = teamState.Money
+				teamRecord.Message = teamState.Message
+			}
+			if lastTeamState, found := lastRound.Teams[team.Login]; found {
+				teamRecord.StartMoney = lastTeamState.Money
+			}
+
+			record.Teams = append(record.Teams, teamRecord)
+		}
+
+		data.History = append(data.History, record)
+	}
+
 }

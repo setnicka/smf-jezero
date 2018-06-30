@@ -1,6 +1,7 @@
 package game
 
 import (
+	"html/template"
 	"time"
 )
 
@@ -26,14 +27,14 @@ type roundState struct {
 
 type teamState struct {
 	Action  int
-	Message string
+	Message template.HTML
 	Money   int
 }
 
 ////////////
 
 type checkFunc func(globalState int, money int) bool
-type actionFunc func(globalState int, money int, actions map[string]int) (int, int, string)
+type actionFunc func(s *State, globalState int, money int, actions map[string]int) (int, int, string)
 
 type ActionDef struct {
 	DisplayName  string

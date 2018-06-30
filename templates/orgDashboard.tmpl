@@ -1,16 +1,6 @@
 {{ define "orgDashboard" }}
-<!DOCTYPE html>
-<html>
-<head>
-  <title>{{ .Title }}</title>
-  <link rel="stylesheet" type="text/css" href="/static/bootstrap.min.css">
-  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
-  <meta http-equiv="refresh" content="5">
-</head>
-<body>
+{{ template "part_header" . }}
 <h1>Dashboard</h1>
-
-{{ template "part_messageBox" . }}
 
 <style type="text/css">
 	#dashboard td{
@@ -26,11 +16,37 @@
 </style>
 
 <a href="teams">Teams</a>
-<table class="table table-bordered table-striped" id="dashboard">
-<thead>
+<h2>Akce</h2>
+{{ template "part_messageBox" . }}
 
+<form method="post">
+	<input type="submit" class="btn btn-primary" onclick="return confirm('Ukončit kolo?');" name="calculateRound" value="Ukončit kolo">
+</form>
+
+{{$allActions := .AllActions}}
+
+<h2>Historie kol</h2>
+
+<table class="table table-bordered" id="history">
+<thead>
+	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{len .Teams}}">Peníze a akce</th></tr>
+	<tr>{{range .Teams}}<th colspan="2">{{.}}</th>{{end}}</tr>
 </thead>
 <tbody>
+	<tr class="info"><th>NOW</th><td>{{.CurrentState}}</td>
+		{{range .CurrentActions}}<td></td><td>{{(index $allActions .).DisplayName}}</td>{{end}}
+	</tr>
+	{{range .History}}
+		<tr><th>{{.RoundNumber}}</th><td>{{.StartState}} -> {{.FinalState}}</td>
+			{{range .Teams}}
+				<td>{{.StartMoney}} -> {{.FinalMoney}}</td>
+				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $allActions .Action).DisplayName}}</span></td>
+			{{end}}
+		</tr>
+	{{end}}
+</tbody>
+</table>
+
 
 </tbody>
 </table>

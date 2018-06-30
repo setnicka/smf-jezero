@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -15,7 +16,7 @@ type teamHistoryRecord struct {
 	Action      int
 	FinalState  int
 	FinalMoney  int
-	Message     string
+	Message     template.HTML
 }
 
 type teamIndexData struct {
@@ -24,7 +25,7 @@ type teamIndexData struct {
 	RoundNumber    int
 	GlobalState    int
 	Money          int
-	GameMessage    string
+	GameMessage    template.HTML
 	SelectedAction int
 
 	History []teamHistoryRecord
@@ -32,27 +33,40 @@ type teamIndexData struct {
 }
 
 func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
-	data := teamIndexData{GeneralData: getGeneralData("Hra", r)}
-	defer func() { executeTemplate(w, "teamIndex", data) }()
-
 	team := server.state.GetTeam(getUser(r))
+	currentState := server.state.GetCurrentState()
+	var money int
+	if currentStateTeam, found := currentState.Teams[team.Login]; found {
+		money = currentStateTeam.Money
+	}
 
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			data.MessageType = "danger"
-			data.Message = "Cannot parse form"
-			return
+			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
 		}
 
 		if r.PostFormValue("setAction") != "" {
-			server.state.CurrentActions[team.Login], _ = strconv.Atoi(r.PostFormValue("setAction"))
-			server.state.Save()
-			data.MessageType = "success"
-			data.Message = fmt.Sprintf("Akce '%s' nastavena", game.GetActions()[server.state.CurrentActions[team.Login]].DisplayName)
+			actionNumber, _ := strconv.Atoi(r.PostFormValue("setAction"))
+			if action, found := game.GetActions()[actionNumber]; found {
+				// Check if action could be performed
+				if action.Check(currentState.GlobalState, money) {
+					server.state.CurrentActions[team.Login] = actionNumber
+					server.state.Save()
+					setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Akce '%s' nastavena", action.DisplayName)})
+				} else {
+					setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce '%s' nemůže být nastavena, nejsou splněny podmínky", action.DisplayName)})
+				}
+			} else {
+				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce s indexem '%d' neexistuje", action)})
+			}
+
 		}
+		http.Redirect(w, r, "", http.StatusSeeOther)
+		return
 	}
 
-	currentState := server.state.GetCurrentState()
+	data := teamIndexData{GeneralData: getGeneralData("Hra", w, r)}
+	defer func() { executeTemplate(w, "teamIndex", data) }()
 
 	data.RoundNumber = currentState.Number + 1
 	data.GlobalState = currentState.GlobalState

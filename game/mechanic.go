@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"html/template"
 	"math"
 	"strings"
 	"time"
@@ -79,14 +80,14 @@ func (s *State) GetCurrentState() *roundState {
 	}
 }
 
-func (s *State) CalculateRound() error {
+func (s *State) EndRound() error {
 	// 1. Get previous state
 	previous := s.GetCurrentState()
 	if previous == nil {
 		return errors.New("No previous state, cannot calculate new round")
 	}
 	// 2. Calculate and save
-	s.Rounds = append(s.Rounds, calculateRound(previous, s.CurrentActions))
+	s.Rounds = append(s.Rounds, s.calculateRound(previous, s.CurrentActions))
 	// 3. Reset actions for the next round
 	for _, team := range s.Teams {
 		s.CurrentActions[team.Login] = DEFAULT_ACTION
@@ -96,7 +97,7 @@ func (s *State) CalculateRound() error {
 	return nil
 }
 
-func calculateRound(previous *roundState, actions map[string]int) *roundState {
+func (s *State) calculateRound(previous *roundState, actions map[string]int) *roundState {
 	roundNumber := previous.Number + 1
 
 	// 1. Ensure that there are all actions and all previous states
@@ -133,7 +134,11 @@ func calculateRound(previous *roundState, actions map[string]int) *roundState {
 		actionDef, _ := actionsDef[action]
 
 		// 3.1 Execute action func
-		globalDiff, teamMoneyDiff, message := actionDef.action(previous.GlobalState, previousMoney[team], actions)
+		var globalDiff, teamMoneyDiff int
+		var message string
+		if actionDef.action != nil {
+			globalDiff, teamMoneyDiff, message = actionDef.action(s, previous.GlobalState, previousMoney[team], actions)
+		}
 
 		// 3.2 Save results
 		log.Debugf("[Round %d - team '%s'] Action '%s': Global state change %d, money change %d", newRound.Number, team, actionDef.DisplayName, globalDiff, teamMoneyDiff)
@@ -141,7 +146,7 @@ func calculateRound(previous *roundState, actions map[string]int) *roundState {
 		newRound.Teams[team] = teamState{
 			Action:  action,
 			Money:   previousMoney[team] + teamMoneyDiff,
-			Message: message,
+			Message: template.HTML(message),
 		}
 	}
 
@@ -156,25 +161,34 @@ func GetActions() map[int]ActionDef {
 	return actionsDef
 }
 
+var actionsNames = map[int]string{
+	ACTION_NOTHING:  "Nic",
+	ACTION_ECO:      "Ekologická výroba",
+	ACTION_HARVEST:  "Neekologická výroba",
+	ACTION_CLEANING: "Čištění",
+	ACTION_CONTROL:  "Kontrola",
+	ACTION_SPIONAGE: "Špionáž",
+}
+
 var actionsDef = map[int]ActionDef{
 	ACTION_NOTHING: {
-		DisplayName:  "Nic",
+		DisplayName:  actionsNames[ACTION_NOTHING],
 		DisplayClass: "",
 	},
 
 	ACTION_ECO: {
-		DisplayName:  "Ekologická výroba",
+		DisplayName:  actionsNames[ACTION_ECO],
 		DisplayClass: "",
-		action: func(globalState int, money int, actions map[string]int) (int, int, string) {
+		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			return -ECO_POLLUTION, globalState, fmt.Sprintf("Ekologická výroba úspěšná, získáno %d peněz a jezero znečištěno o %d jednotek", globalState, ECO_POLLUTION)
 		},
 	},
 
 	ACTION_HARVEST: {
-		DisplayName:  "Neekologická výroba",
+		DisplayName:  actionsNames[ACTION_HARVEST],
 		DisplayClass: "",
 		check:        func(globalState int, money int) bool { return (money >= 0) },
-		action: func(globalState int, money int, actions map[string]int) (int, int, string) {
+		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> penalty
 			if inActions(ACTION_CONTROL, actions) {
 				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Neekologická výroba byla odhalena kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d peněz", HARVEST_PENALTY)
@@ -186,9 +200,9 @@ var actionsDef = map[int]ActionDef{
 	},
 
 	ACTION_CLEANING: {
-		DisplayName:  "Čištění",
+		DisplayName:  actionsNames[ACTION_CLEANING],
 		DisplayClass: "",
-		action: func(globalState int, money int, actions map[string]int) (int, int, string) {
+		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			cleaning := CLEANING_ABSOLUTE
 			if globalState > 0 {
 				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
@@ -199,25 +213,25 @@ var actionsDef = map[int]ActionDef{
 	},
 
 	ACTION_CONTROL: {
-		DisplayName:  "Kontrola",
+		DisplayName:  actionsNames[ACTION_CONTROL],
 		DisplayClass: "",
-		action: func(globalState int, money int, actions map[string]int) (int, int, string) {
+		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			return 0, 0, fmt.Sprintf("Požádali jsme ministerstvo o kontrolu, pokud někdo v minulém kole prováděl něco špatného, tak byl potrestán")
 		},
 	},
 
 	ACTION_SPIONAGE: {
-		DisplayName:  "Špionáž",
+		DisplayName:  actionsNames[ACTION_SPIONAGE],
 		DisplayClass: "",
 		check:        func(globalState int, money int) bool { return (money >= 0) },
-		action: func(globalState int, money int, actions map[string]int) (int, int, string) {
+		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> no spionage
 			if inActions(ACTION_CONTROL, actions) {
 				return 0, -SPIONAGE_COST, fmt.Sprintf("Špionáž nemohla být dokončena kvůli probíhající kontrole jiného týmu, nic jste nezjistili")
 			} else {
 				results := []string{}
 				for team, action := range actions {
-					results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", team, action))
+					results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", s.GetTeam(team).Name, actionsNames[action]))
 				}
 				return 0, -SPIONAGE_COST, fmt.Sprintf("Špionáž úspěšná, zjištěno:<ul>\n%s\n</ul>", strings.Join(results, "\n"))
 			}
@@ -234,4 +248,12 @@ func inActions(action int, actions map[string]int) bool {
 		}
 	}
 	return false
+}
+
+func (a ActionDef) Check(globalState int, money int) bool {
+	if a.check == nil {
+		return true
+	} else {
+		return a.check(globalState, money)
+	}
 }
