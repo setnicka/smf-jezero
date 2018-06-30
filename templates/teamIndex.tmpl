@@ -24,6 +24,26 @@
 	margin-bottom: -15px;
 }
 </style>
+
+<script type="text/javascript">
+function httpGet(theUrl) {
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.open("GET", theUrl, false); // false for synchronous request
+	xmlHttp.send(null);
+	return xmlHttp.responseText;
+}
+
+function checkNewRound() {
+	var round = httpGet("getRound");
+	if (round != "{{.RoundNumber}}") {
+		window.location.reload(false);
+	}
+}
+
+setInterval(checkNewRound, 1000);
+</script>
+
+
 <div class="col-md-4" style="border: 0px;">
 
 <div id="teamName">Tým: {{.TeamName}}</div>
@@ -41,21 +61,21 @@
 <h2>Akce</h2>
 {{ template "part_messageBox" . }}
 
-<form method="post">
+<form method="post" id="actionsForm">
 	<div class="funkyradio">
 		{{$selectedAction := .SelectedAction}}
 		{{$globalState := .GlobalState}}
 		{{$money := .Money}}
 		{{range $id, $action := .Actions}}
 			{{$active := $action.Check $globalState $money }}
-			<div class="funkyradio-primary">
-				<input type="radio" id="radio{{$id}}" name="setAction" value="{{$id}}"
+			<div class="funkyradio-success">
+				<input type="radio" id="radio{{$id}}" name="setAction" value="{{$id}}" onchange="document.getElementById('actionsForm').submit();"
 					{{- if eq $selectedAction $id}} checked{{end}}{{if not $active}} disabled{{end}}>
 				<label for="radio{{$id}}">{{$action.DisplayName}}</label>
 			</div>
 		{{end}}
 	</div>
-	<center><input type="submit" class="btn btn-primary" value="Zvolit akci"></center>
+	<!---<center><input type="submit" class="btn btn-primary" value="Zvolit akci"></center>--->
 </form>
 
 {{$allActions := .Actions}}

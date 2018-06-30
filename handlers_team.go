@@ -9,6 +9,10 @@ import (
 	"github.com/setnicka/smf-jezero/game"
 )
 
+func getRoundHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "%d", server.state.GetRoundNumber())
+}
+
 type teamHistoryRecord struct {
 	RoundNumber int
 	StartState  int

@@ -80,6 +80,8 @@ func (s *Server) Start() {
 	router.HandleFunc("/login", loginHandler)
 	router.HandleFunc("/", auth(teamIndexHandler))
 
+	router.HandleFunc("/getRound", getRoundHandler)
+
 	// 2. Load templates
 	if _, err := server.getTemplates(); err != nil {
 		log.Errorf("Cannot load templates: %v", err)
