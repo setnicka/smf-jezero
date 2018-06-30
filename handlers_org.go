@@ -123,8 +123,11 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("sendState") != "" {
-			setFlashMessage(w, r, FlashMessage{"info", "Stav poslán"})
-			server.state.SendState()
+			if err := server.state.SendState(); err == nil {
+				setFlashMessage(w, r, FlashMessage{"info", "Stav poslán"})
+			} else {
+				setFlashMessage(w, r, FlashMessage{"warning", fmt.Sprintf("Chyba při posílání stavu: %v", err)})
+			}
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)

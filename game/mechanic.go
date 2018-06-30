@@ -104,14 +104,17 @@ func (s *State) EndRound() error {
 	s.Save()
 
 	// 5. Send data over TCP
-	s.SendState()
-	return nil
+	return s.SendState()
 }
 
-func (s *State) SendState() {
-	if conn, err := net.Dial("tcp", tcp_visualizator); err == nil {
+func (s *State) SendState() error {
+	if conn, err := net.DialTimeout("tcp", tcp_visualizator, time.Second); err == nil {
+		defer conn.Close()
 		fmt.Fprintf(conn, strconv.Itoa(s.GetCurrentState().GlobalState)+"\n")
 		fmt.Fprintf(conn, "k"+strconv.Itoa(s.GetRoundNumber())+"\n")
+		return nil
+	} else {
+		return err
 	}
 }
 
@@ -188,9 +191,9 @@ func GetActions() map[int]ActionDef {
 
 var actionsNames = map[int]string{
 	ACTION_NOTHING:  "Nic",
-	ACTION_ECO:      "Ekologická výroba",
-	ACTION_HARVEST:  "Neekologická výroba",
-	ACTION_CLEANING: "Čištění",
+	ACTION_ECO:      "Lehké louhování",
+	ACTION_HARVEST:  "Drsné drancování",
+	ACTION_CLEANING: "Hnojení",
 	ACTION_CONTROL:  "Kontrola",
 	ACTION_SPIONAGE: "Špionáž",
 }
@@ -205,7 +208,7 @@ var actionsDef = map[int]ActionDef{
 		DisplayName:  actionsNames[ACTION_ECO],
 		DisplayClass: "",
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return -ECO_POLLUTION, globalState, fmt.Sprintf("Ekologická výroba úspěšná, získáno %d peněz a jezero znečištěno o %d jednotek", globalState, ECO_POLLUTION)
+			return -ECO_POLLUTION, globalState, fmt.Sprintf("Kytky pozvolna vylouhovány, získali jste %d galeonů a zhoršili stav skleníku o %d", globalState, ECO_POLLUTION)
 		},
 	},
 
@@ -216,10 +219,10 @@ var actionsDef = map[int]ActionDef{
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> penalty
 			if inActions(ACTION_CONTROL, actions) {
-				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Neekologická výroba byla odhalena kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d peněz", HARVEST_PENALTY)
+				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše drsné drancování bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d galeonů", HARVEST_PENALTY)
 			} else {
 				gathered_money := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gathered_money, fmt.Sprintf("Neekologická výroba úspěšná, získáno %d peněz a jezero znečištěno o %d jednotek", gathered_money, HARVEST_POLLUTION)
+				return -HARVEST_POLLUTION, gathered_money, fmt.Sprintf("Drsně jste vydrancovali skleník, získali jste za to %d galeonů a zhoršili stav skleníku o %d", gathered_money, HARVEST_POLLUTION)
 			}
 		},
 	},
@@ -233,7 +236,7 @@ var actionsDef = map[int]ActionDef{
 				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
 			}
 
-			return cleaning, 0, fmt.Sprintf("Jezero vyčištěno o %d jednotek", cleaning)
+			return cleaning, 0, fmt.Sprintf("Zlepšili jste hnojením stav skleníku o %d", cleaning)
 		},
 	},
 

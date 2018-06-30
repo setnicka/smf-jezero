@@ -27,13 +27,13 @@
 <div class="col-md-4" style="border: 0px;">
 
 <div id="teamName">Tým: {{.TeamName}}</div>
-<h1 style="text-align: center;">Stav: {{.GlobalState}}</h1>
+<h1 style="text-align: center;">Stav skleníku: {{.GlobalState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>
 
 <div class="input-group">
-  <span class="input-group-addon"><b>Peněz:</b></span>
+  <span class="input-group-addon"><b>Galeonů:</b></span>
   <input type="text" class="form-control" value="{{.Money}}" disabled style="font-weight: bold; text-align: right;">
-  <span class="input-group-addon">$</span>
+  <span class="input-group-addon">ʛ</span>
 </div>
 
 {{if .GameMessage}}<div id="gameMessage"><b>Výsledek minulé akce:</b> {{.GameMessage}}</div>{{end}}

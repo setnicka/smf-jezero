@@ -32,7 +32,7 @@
 
 <a href="teams" style="float: right;"><button class="btn btn-default">Teams</button></a>
 
-<h1 style="text-align: center;">Stav: {{.CurrentState}}</h1>
+<h1 style="text-align: center;">Stav skleníku: {{.CurrentState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>
 
 
@@ -51,6 +51,7 @@
 </div>
 
 {{$allActions := .AllActions}}
+{{$history := .History}}
 
 <h2>Historie kol</h2>
 
