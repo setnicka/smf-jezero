@@ -11,16 +11,22 @@
 </head>
 <body>
 <style type="text/css" media="screen">
-#roundNumber {
-text-align: center;
-font-style: italic;
-color: #777777;
-margin-top: -5px;
-margin-bottom: 5px;
+#roundNumber, #teamName {
+	text-align: center;
+	font-style: italic;
+	color: #777777;
+	margin-top: -5px;
+	margin-bottom: 5px;
+}
+
+#teamName {
+	margin-top: 5px;
+	margin-bottom: -15px;
 }
 </style>
 <div class="col-md-4" style="border: 0px;">
 
+<div id="teamName">Tým: {{.TeamName}}</div>
 <h1 style="text-align: center;">Stav: {{.GlobalState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>
 

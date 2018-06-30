@@ -18,16 +18,16 @@ const (
 	DEFAULT_GLOBAL_STATE = 100
 	DEFAULT_MONEY        = 100
 
-	ECO_POLLUTION = 10 // znečištění po ekologické výrobě
+	ECO_POLLUTION = 1 // znečištění po ekologické výrobě
 
-	HARVEST_POLLUTION = 30 // znečištění po neekologické výrobě
-	HARVEST_PENALTY   = 200
+	HARVEST_POLLUTION = 7 // znečištění po neekologické výrobě
 	HARVEST_BONUS     = 100
+	HARVEST_PENALTY   = 100
 
-	CLEANING_ABSOLUTE = 20
-	CLEANING_RELATIVE = 4
+	CLEANING_ABSOLUTE = 10
+	CLEANING_RELATIVE = 20
 
-	SPIONAGE_COST = 20
+	SPIONAGE_COST = 25
 
 	// Actions constants
 	ACTION_NOTHING = iota

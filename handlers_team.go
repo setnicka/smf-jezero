@@ -22,6 +22,7 @@ type teamHistoryRecord struct {
 type teamIndexData struct {
 	GeneralData
 
+	TeamName       string
 	RoundNumber    int
 	GlobalState    int
 	Money          int
@@ -100,6 +101,7 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		data.History = append(data.History, record)
 	}
 
+	data.TeamName = team.Name
 	data.Actions = game.GetActions()
 	data.SelectedAction, _ = server.state.CurrentActions[team.Login]
 }
