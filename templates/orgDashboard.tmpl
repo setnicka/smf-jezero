@@ -1,6 +1,5 @@
 {{ define "orgDashboard" }}
 {{ template "part_header" . }}
-<h1>Dashboard</h1>
 
 <style type="text/css">
 	#dashboard td{
@@ -15,13 +14,19 @@
 	}
 </style>
 
-<a href="teams">Teams</a>
-<h2>Akce</h2>
+<a href="teams" style="float: right;"><button class="btn btn-default">Teams</button></a>
+
+<h1>Dashboard</h1>
 {{ template "part_messageBox" . }}
 
+<div style="max-width: 400px; padding: 10px; background-color: #eeeeee; border: 1px #dddddd solid; border-radius: 5px;">
 <form method="post">
-	<input type="submit" class="btn btn-primary" onclick="return confirm('Ukončit kolo?');" name="calculateRound" value="Ukončit kolo">
+	<input type="submit" class="btn btn-primary btn-block" onclick="return confirm('Ukončit kolo?');" name="calculateRound" value="Ukončit kolo">
 </form>
+<form method="post" style="margin-top: 4px;">
+	<input type="submit" class="btn btn-danger btn-block" onclick="return confirm('Pozot! Toto vymaže všechny kola, pokračovat?');" name="resetGame" value="Resetovat hru">
+</form>
+</div>
 
 {{$allActions := .AllActions}}
 
@@ -39,7 +44,7 @@
 	{{range .History}}
 		<tr><th>{{.RoundNumber}}</th><td>{{.StartState}} -> {{.FinalState}}</td>
 			{{range .Teams}}
-				<td>{{.StartMoney}} -> {{.FinalMoney}}</td>
+				<td>{{if .Found}}{{.StartMoney}} -> {{.FinalMoney}}{{end}}</td>
 				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $allActions .Action).DisplayName}}</span></td>
 			{{end}}
 		</tr>

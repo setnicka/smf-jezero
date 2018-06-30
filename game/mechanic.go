@@ -102,20 +102,27 @@ func (s *State) calculateRound(previous *roundState, actions map[string]int) *ro
 
 	// 1. Ensure that there are all actions and all previous states
 	previousMoney := map[string]int{}
-	for team, state := range previous.Teams {
-		if _, found := actions[team]; !found {
-			log.Errorf("[Round %d] Missing action for team '%s', fallback to the default action '%s'", roundNumber, actionsDef[DEFAULT_ACTION].DisplayName)
-			actions[team] = DEFAULT_ACTION
+	for _, team := range s.Teams {
+		prevTeam, found := previous.Teams[team.Login]
+		if found {
+			previousMoney[team.Login] = prevTeam.Money
+		} else {
+			log.Infof("[Round %d] New team '%s', initializing to the default money '%d'", roundNumber, team.Login, DEFAULT_MONEY)
+			previousMoney[team.Login] = DEFAULT_MONEY
 		}
-		previousMoney[team] = state.Money
+
+		if _, found := actions[team.Login]; !found {
+			log.Infof("[Round %d] Missing action for team '%s', fallback to the default action '%s'", roundNumber, team.Login, actionsDef[DEFAULT_ACTION].DisplayName)
+			actions[team.Login] = DEFAULT_ACTION
+		}
 	}
 	for team, action := range actions {
 		if _, found := actionsDef[action]; !found {
-			log.Errorf("[Round %d] Unknown action '%d' for team '%s', fallback to the default action '%s'", roundNumber, action, team, actionsDef[DEFAULT_ACTION].DisplayName)
+			log.Infof("[Round %d] Unknown action '%d' for team '%s', fallback to the default action '%s'", roundNumber, action, team, actionsDef[DEFAULT_ACTION].DisplayName)
 			actions[team] = DEFAULT_ACTION
 		}
 		if _, found := previousMoney[team]; !found {
-			log.Errorf("[Round %d] Missing previous state for team '%s', initializing to the default money '%d'", roundNumber, team, DEFAULT_MONEY)
+			log.Infof("[Round %d] Missing previous state for team '%s', initializing to the default money '%d'", roundNumber, team, DEFAULT_MONEY)
 			previousMoney[team] = DEFAULT_MONEY
 		}
 	}

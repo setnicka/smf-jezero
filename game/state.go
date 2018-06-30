@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	LOGS_DIR       = "logs"
+	SAVE_DIR       = "saves"
 	STATE_FILENAME = "state.json"
 )
 
@@ -103,8 +103,8 @@ func (s *State) Save() {
 	// 1. If exists current state move it into folder
 	if _, err := os.Stat(STATE_FILENAME); err == nil {
 		// Ensure dir exists
-		os.MkdirAll(LOGS_DIR, os.ModePerm)
-		os.Rename(STATE_FILENAME, path.Join(LOGS_DIR, fmt.Sprintf("%s%s", STATE_FILENAME, time.Now().Format(".150405.00")))) // 2006-01-02_150405
+		os.MkdirAll(SAVE_DIR, os.ModePerm)
+		os.Rename(STATE_FILENAME, path.Join(SAVE_DIR, fmt.Sprintf("%s%s", STATE_FILENAME, time.Now().Format(".150405.00")))) // 2006-01-02_150405
 	}
 
 	// 2. Marshal state into json

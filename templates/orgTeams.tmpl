@@ -1,10 +1,12 @@
 {{ define "orgTeams" }}
 {{ template "part_header" . }}
- <h1>Teams</h1>
+
+<a href="dashboard" style="float: right;"><button class="btn btn-default">Dashboard (game control)</button></a>
+
+<h1>Teams</h1>
 
 {{ template "part_messageBox" . }}
 
-<a href="dashboard">Dashboard</a> (game control)
 <table class="table">
 <thead>
 	<tr><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>

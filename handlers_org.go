@@ -98,6 +98,7 @@ type orgDashboardRoundRecord struct {
 }
 
 type orgDashboardTeamRecord struct {
+	Found      bool
 	StartMoney int
 	Action     int
 	FinalMoney int
@@ -111,8 +112,13 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("calculateRound") != "" {
-			setFlashMessage(w, r, FlashMessage{"succes", "Kolo spočítáno, výsledky níže"})
+			setFlashMessage(w, r, FlashMessage{"success", "Kolo spočítáno, výsledky níže"})
 			server.state.EndRound()
+		}
+
+		if r.PostFormValue("resetGame") != "" {
+			setFlashMessage(w, r, FlashMessage{"info", "Hra resetována"})
+			server.state.InitGame()
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
@@ -150,6 +156,7 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			teamRecord := orgDashboardTeamRecord{}
 
 			if teamState, found := currentRound.Teams[team.Login]; found {
+				teamRecord.Found = true
 				teamRecord.Action = teamState.Action
 				teamRecord.FinalMoney = teamState.Money
 				teamRecord.Message = teamState.Message
