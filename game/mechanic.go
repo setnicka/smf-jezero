@@ -122,62 +122,36 @@ func (s *State) SendState() error {
 	}
 }
 
-func (s *State) calculateRound(previous *roundState, actions map[string]int) *roundState {
-	roundNumber := previous.Number + 1
+func (s *State) calculateRound(previousRound *roundState, actions map[string]int) *roundState {
+	roundNumber := previousRound.Number + 1
 
-	// 1. Ensure that there are all actions and all previous states
-	previousMoney := map[string]int{}
-	for _, team := range s.Teams {
-		prevTeam, found := previous.Teams[team.Login]
-		if found {
-			previousMoney[team.Login] = prevTeam.Money
-		} else {
-			log.Infof("[Round %d] New team '%s', initializing to the default money '%d'", roundNumber, team.Login, DEFAULT_MONEY)
-			previousMoney[team.Login] = DEFAULT_MONEY
-		}
-
-		if _, found := actions[team.Login]; !found {
-			log.Infof("[Round %d] Missing action for team '%s', fallback to the default action '%s'", roundNumber, team.Login, actionsDef[DEFAULT_ACTION].DisplayName)
-			actions[team.Login] = DEFAULT_ACTION
-		}
-	}
-	for team, action := range actions {
-		if _, found := actionsDef[action]; !found {
-			log.Infof("[Round %d] Unknown action '%d' for team '%s', fallback to the default action '%s'", roundNumber, action, team, actionsDef[DEFAULT_ACTION].DisplayName)
-			actions[team] = DEFAULT_ACTION
-		}
-		if _, found := previousMoney[team]; !found {
-			log.Infof("[Round %d] Missing previous state for team '%s', initializing to the default money '%d'", roundNumber, team, DEFAULT_MONEY)
-			previousMoney[team] = DEFAULT_MONEY
-		}
-	}
-
-	// 2. Prepare new round struct
+	// 1. Prepare new round struct
 	newRound := &roundState{
 		Number:      roundNumber,
-		GlobalState: previous.GlobalState,
+		GlobalState: previousRound.GlobalState,
 		Teams:       map[string]teamState{},
 		Time:        time.Now(),
 	}
 
-	// 3. Do all actions
-	for team, action := range actions {
-		// We checked, that action exists, no need to check again
-		actionDef, _ := actionsDef[action]
+	// 2. Do actions for all teams
+	for _, team := range s.Teams {
+		// 2.1 Get previous state of money and current action of each team
+		previousMoney := previousRound.getMoney(team.Login)
+		actionID, actionDef := getAction(actions, team.Login)
 
-		// 3.1 Execute action func
+		// 2.2 Execute action func
 		var globalDiff, teamMoneyDiff int
 		var message string
 		if actionDef.action != nil {
-			globalDiff, teamMoneyDiff, message = actionDef.action(s, previous.GlobalState, previousMoney[team], actions)
+			globalDiff, teamMoneyDiff, message = actionDef.action(s, previousRound.GlobalState, previousMoney, actions)
 		}
 
-		// 3.2 Save results
-		log.Debugf("[Round %d - team '%s'] Action '%s': Global state change %d, money change %d", newRound.Number, team, actionDef.DisplayName, globalDiff, teamMoneyDiff)
+		// 2.3 Save results
+		log.Debugf("[Round %d - team '%s'] Action '%s': Global state change %d, money change %d", newRound.Number, team.Name, actionDef.DisplayName, globalDiff, teamMoneyDiff)
 		newRound.GlobalState += globalDiff
-		newRound.Teams[team] = teamState{
-			Action:  action,
-			Money:   previousMoney[team] + teamMoneyDiff,
+		newRound.Teams[team.Login] = teamState{
+			Action:  actionID,
+			Money:   previousMoney + teamMoneyDiff,
 			Message: template.HTML(message),
 		}
 	}
@@ -288,4 +262,24 @@ func (a ActionDef) Check(globalState int, money int) bool {
 	} else {
 		return a.check(globalState, money)
 	}
+}
+
+func (round *roundState) getMoney(login string) int {
+	if team, found := round.Teams[login]; found {
+		return team.Money
+	}
+	log.Infof("New team '%s', initializing to the default money '%d'", login, DEFAULT_MONEY)
+	return DEFAULT_MONEY
+}
+
+func getAction(actions map[string]int, login string) (int, ActionDef) {
+	if actionID, found := actions[login]; found {
+		if action, found := actionsDef[actionID]; found {
+			return actionID, action
+		}
+		log.Infof("Team %s - There is no action with ID '%d', fallbacking to the default action '%s'.", login, actionID, actionsDef[DEFAULT_ACTION].DisplayName)
+		return DEFAULT_ACTION, actionsDef[DEFAULT_ACTION]
+	}
+	log.Infof("No action for team '%s', fallbacking to the default action '%s'.", login, actionsDef[DEFAULT_ACTION].DisplayName)
+	return DEFAULT_ACTION, actionsDef[DEFAULT_ACTION]
 }
