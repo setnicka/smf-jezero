@@ -12,15 +12,16 @@
 	<tr><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>
 </thead>
 <tbody>
-	{{range $login, $name := .Teams}}
+	{{range $login, $team := .Teams}}
 	<tr>
-		<td>{{$login}}</td><td>{{$name}}</td>
-		<td><form method="post" class="form-inline">
+		<td>{{$login}}</td><td>{{$team.Name}}</td>
+		<td>{{if $team.Password}}🔑&nbsp;{{else}}<i><small>[not set]</small></i>{{end}}
+		<form method="post" class="form-inline">
 			<input type="hidden" name="login" value="{{$login}}">
 			<input type="password" name="setPassword" placeholder="New password">
 			<input type="submit" class="btn btn-primary" value="Set password">
 		</form>
-		<td><form method="post" onsubmit="return confirm('Delete the {{$name}} team?');" class="form-inline">
+		<td><form method="post" onsubmit="return confirm('Delete the {{$team.Name}} team?');" class="form-inline">
 			<input type="hidden" name="deleteTeam" value="{{$login}}">
 			<input type="submit" class="btn btn-danger" value="Delete team">
 		</form></td>

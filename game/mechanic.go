@@ -48,7 +48,7 @@ const (
 // CALCULATE ///////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-// will reset all
+// InitGame resets the whole game (deletes all rounds).
 func (s *State) InitGame() {
 	log.Debugf("Init state of the game - adding initial round and resetting current actions")
 
@@ -76,7 +76,8 @@ func (s *State) InitGame() {
 	s.Save()
 }
 
-func (s *State) GetCurrentState() *roundState {
+// GetLastState returns last round of the game.
+func (s *State) GetLastState() *roundState {
 	if len(s.Rounds) > 0 {
 		return s.Rounds[len(s.Rounds)-1]
 	} else {
@@ -84,13 +85,15 @@ func (s *State) GetCurrentState() *roundState {
 	}
 }
 
+// GetRoundNumber returns number of the current round.
 func (s *State) GetRoundNumber() int {
-	return s.GetCurrentState().Number + 1 // actual round number = last round number + 1
+	return s.GetLastState().Number + 1 // actual round number = last round number + 1
 }
 
+// EndRound will end this round and compute the actions.
 func (s *State) EndRound() error {
 	// 1. Get previous state
-	previous := s.GetCurrentState()
+	previous := s.GetLastState()
 	if previous == nil {
 		return errors.New("No previous state, cannot calculate new round")
 	}
@@ -107,10 +110,11 @@ func (s *State) EndRound() error {
 	return s.SendState()
 }
 
+// SendState sends the state to the visualizator.
 func (s *State) SendState() error {
 	if conn, err := net.DialTimeout("tcp", tcp_visualizator, time.Second); err == nil {
 		defer conn.Close()
-		fmt.Fprintf(conn, strconv.Itoa(s.GetCurrentState().GlobalState)+"\n")
+		fmt.Fprintf(conn, strconv.Itoa(s.GetLastState().GlobalState)+"\n")
 		fmt.Fprintf(conn, "k"+strconv.Itoa(s.GetRoundNumber())+"\n")
 		return nil
 	} else {
@@ -221,8 +225,8 @@ var actionsDef = map[int]ActionDef{
 			if inActions(ACTION_CONTROL, actions) {
 				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše drsné drancování bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d galeonů", HARVEST_PENALTY)
 			} else {
-				gathered_money := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gathered_money, fmt.Sprintf("Drsně jste vydrancovali skleník, získali jste za to %d galeonů a zhoršili stav skleníku o %d", gathered_money, HARVEST_POLLUTION)
+				gatheredMoney := globalState + HARVEST_BONUS
+				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Drsně jste vydrancovali skleník, získali jste za to %d galeonů a zhoršili stav skleníku o %d", gatheredMoney, HARVEST_POLLUTION)
 			}
 		},
 	},
@@ -235,7 +239,6 @@ var actionsDef = map[int]ActionDef{
 			if globalState > 0 {
 				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
 			}
-
 			return cleaning, 0, fmt.Sprintf("Zlepšili jste hnojením stav skleníku o %d", cleaning)
 		},
 	},
@@ -278,6 +281,7 @@ func inActions(action int, actions map[string]int) bool {
 	return false
 }
 
+// Check if the action could be performed for given global state and team amount of money.
 func (a ActionDef) Check(globalState int, money int) bool {
 	if a.check == nil {
 		return true

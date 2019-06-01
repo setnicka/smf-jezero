@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+
 	//"github.com/coreos/go-log/log"
 
 	"github.com/setnicka/smf-jezero/game"
@@ -23,9 +24,8 @@ func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 			session.Save(r, w)
 			http.Redirect(w, r, "dashboard", http.StatusSeeOther)
 			return
-		} else {
-			setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		}
+		setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		http.Redirect(w, r, "login", http.StatusSeeOther)
 		return
 	}
@@ -38,7 +38,7 @@ func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 type orgTeamsData struct {
 	GeneralData
-	Teams map[string]string
+	Teams map[string]game.Team
 }
 
 func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,9 +73,9 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	data := orgTeamsData{GeneralData: getGeneralData("Týmy", w, r)}
 	defer func() { executeTemplate(w, "orgTeams", data) }()
 
-	data.Teams = map[string]string{}
+	data.Teams = map[string]game.Team{}
 	for _, team := range server.state.GetTeams() {
-		data.Teams[team.Login] = team.Name
+		data.Teams[team.Login] = team
 	}
 }
 
@@ -141,7 +141,7 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.AllActions = game.GetActions()
 	data.RoundNumber = server.state.GetRoundNumber()
-	data.CurrentState = server.state.GetCurrentState().GlobalState
+	data.CurrentState = server.state.GetLastState().GlobalState
 	data.Teams = []string{}
 	data.CurrentActions = []int{}
 	for _, team := range allTeams {

@@ -6,12 +6,11 @@ import (
 )
 
 type State struct {
-	Teams          []team
+	Teams          []Team
 	Rounds         []*roundState // Round i = state after i-th round (round 0 = start state)
 	CurrentActions map[string]int
 }
-
-type team struct {
+type Team struct {
 	Name     string
 	Login    string
 	Salt     string

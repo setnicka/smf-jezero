@@ -49,22 +49,24 @@ func checkSession(w http.ResponseWriter, r *http.Request, renew bool) bool {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-type NoListFile struct {
+type noListFile struct {
 	http.File
 }
 
-func (f NoListFile) Readdir(count int) ([]os.FileInfo, error) {
+func (f noListFile) Readdir(count int) ([]os.FileInfo, error) {
 	return nil, nil
 }
 
+// NoListFileSystem is used for accessing static resources but without listing directory index
 type NoListFileSystem struct {
 	base http.FileSystem
 }
 
+// Open opens dir/file on given path
 func (fs NoListFileSystem) Open(name string) (http.File, error) {
 	f, err := fs.base.Open(name)
 	if err != nil {
 		return nil, err
 	}
-	return NoListFile{f}, nil
+	return noListFile{f}, nil
 }

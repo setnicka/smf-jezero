@@ -61,7 +61,7 @@ type fileHashInfo struct {
 	hash    string
 }
 
-var fileModMap map[string]fileHashInfo = make(map[string]fileHashInfo)
+var fileModMap = make(map[string]fileHashInfo)
 
 func fileChanged(path string) bool {
 	stats, err := os.Stat(path)

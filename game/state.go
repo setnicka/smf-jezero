@@ -20,7 +20,7 @@ const (
 func Init() *State {
 	log.Debug("Initializing game state")
 	state := &State{
-		Teams: []team{},
+		Teams: []Team{},
 	}
 
 	// Try to load previously saved state
@@ -44,11 +44,11 @@ func Init() *State {
 	return state
 }
 
-func (s *State) GetTeams() []team {
+func (s *State) GetTeams() []Team {
 	return s.Teams
 }
 
-func (s *State) GetTeam(login string) *team {
+func (s *State) GetTeam(login string) *Team {
 	for i, team := range s.Teams {
 		if team.Login == login {
 			return &s.Teams[i]
@@ -61,7 +61,7 @@ func (s *State) AddTeam(login string, name string) error {
 	if s.GetTeam(login) != nil {
 		return fmt.Errorf("Team with name '%s' already exists", login)
 	}
-	s.Teams = append(s.Teams, team{Login: login, Name: name})
+	s.Teams = append(s.Teams, Team{Login: login, Name: name})
 	s.Save()
 	return nil
 }

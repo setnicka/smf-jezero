@@ -33,9 +33,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			session.Save(r, w)
 			http.Redirect(w, r, "/", http.StatusSeeOther)
 			return
-		} else {
-			setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		}
+		setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		http.Redirect(w, r, "login", http.StatusSeeOther)
 		return
 	}
@@ -47,11 +46,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 ////////////////////////////////////////////////////////////////////////////////
 
 const FLASH_SESSION = "flash-session"
-
-type FlashMessage struct {
-	Type    string
-	Message string
-}
 
 func setFlashMessage(w http.ResponseWriter, r *http.Request, message FlashMessage) {
 	// Register the struct so encoding/gob knows about it

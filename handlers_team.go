@@ -39,7 +39,7 @@ type teamIndexData struct {
 
 func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 	team := server.state.GetTeam(getUser(r))
-	currentState := server.state.GetCurrentState()
+	currentState := server.state.GetLastState()
 	var money int
 	if currentStateTeam, found := currentState.Teams[team.Login]; found {
 		money = currentStateTeam.Money
@@ -62,7 +62,7 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 					setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce '%s' nemůže být nastavena, nejsou splněny podmínky", action.DisplayName)})
 				}
 			} else {
-				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce s indexem '%d' neexistuje", action)})
+				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce s indexem '%d' neexistuje", actionNumber)})
 			}
 
 		}

@@ -48,16 +48,6 @@ func main() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func newRouter(name string) *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/start-hry", loginHandler)
-	fs := NoListFileSystem{http.Dir(STATIC_DIR + "/" + name)}
-	global_fs := NoListFileSystem{http.Dir(STATIC_DIR + "/global/" + name)}
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(fs)))
-	router.PathPrefix("/favicon.ico").Handler(http.StripPrefix("", http.FileServer(global_fs)))
-	return router
-}
-
 func (s *Server) Start() {
 	log.Info("Starting server...")
 
@@ -78,12 +68,12 @@ func (s *Server) Start() {
 
 	// Teams handlers
 	router.HandleFunc("/login", loginHandler)
-	router.HandleFunc("/", auth(teamIndexHandler))
+	router.HandleFunc("/", auth(s, teamIndexHandler))
 
 	router.HandleFunc("/getRound", getRoundHandler)
 
 	// 2. Load templates
-	if _, err := server.getTemplates(); err != nil {
+	if _, err := s.getTemplates(); err != nil {
 		log.Errorf("Cannot load templates: %v", err)
 		return
 	}
@@ -93,7 +83,7 @@ func (s *Server) Start() {
 	http.ListenAndServe(":8080", router)
 }
 
-func auth(handle http.HandlerFunc, renewAuth ...bool) http.HandlerFunc {
+func auth(server *Server, handle http.HandlerFunc, renewAuth ...bool) http.HandlerFunc {
 	renew := true
 	if len(renewAuth) > 0 {
 		renew = renewAuth[0]
