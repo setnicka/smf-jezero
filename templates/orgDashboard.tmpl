@@ -32,7 +32,7 @@
 
 <a href="teams" style="float: right;"><button class="btn btn-default">Teams</button></a>
 
-<h1 style="text-align: center;">Stav skleníku: {{.CurrentState}}</h1>
+<h1 style="text-align: center;">Stav jezera: {{.CurrentState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>
 
 
@@ -111,7 +111,7 @@
 				},
 			{{end}}
 			{
-				label: 'SKLENÍK',
+				label: 'JEZERO',
 				backgroundColor: window.chartColors.red,
 				borderColor: window.chartColors.red,
 				data: [{{range $history}}{{.FinalState}},{{end}}].reverse(),
@@ -140,7 +140,7 @@
 					display: true,
 					scaleLabel: {
 						display: true,
-						labelString: 'Galeonů'
+						labelString: 'ZEĎcoinů'
 					}
 				}]
 			}

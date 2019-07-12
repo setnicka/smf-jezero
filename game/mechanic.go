@@ -169,9 +169,9 @@ func GetActions() map[int]ActionDef {
 
 var actionsNames = map[int]string{
 	ACTION_NOTHING:  "Nic",
-	ACTION_ECO:      "Lehké louhování",
-	ACTION_HARVEST:  "Drsné drancování",
-	ACTION_CLEANING: "Hnojení",
+	ACTION_ECO:      "Rybolov",
+	ACTION_HARVEST:  "Průmyslový rybolov",
+	ACTION_CLEANING: "Čištění",
 	ACTION_CONTROL:  "Kontrola",
 	ACTION_SPIONAGE: "Špionáž",
 }
@@ -186,7 +186,7 @@ var actionsDef = map[int]ActionDef{
 		DisplayName:  actionsNames[ACTION_ECO],
 		DisplayClass: "",
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return -ECO_POLLUTION, globalState, fmt.Sprintf("Kytky pozvolna vylouhovány, získali jste %d galeonů a zhoršili stav skleníku o %d", globalState, ECO_POLLUTION)
+			return -ECO_POLLUTION, globalState, fmt.Sprintf("Provedli jste normální rybolov, získali jste %d ZEĎcoinů a zhoršili stav jezera o %d", globalState, ECO_POLLUTION)
 		},
 	},
 
@@ -197,10 +197,10 @@ var actionsDef = map[int]ActionDef{
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> penalty
 			if inActions(ACTION_CONTROL, actions) {
-				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše drsné drancování bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d galeonů", HARVEST_PENALTY)
+				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Váš průmyslový rybolov byl odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d ZEĎcoinů", HARVEST_PENALTY)
 			} else {
 				gatheredMoney := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Drsně jste vydrancovali skleník, získali jste za to %d galeonů a zhoršili stav skleníku o %d", gatheredMoney, HARVEST_POLLUTION)
+				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Provedli jste průmyslový rybolov, získali jste za to %d ZEĎcoinů a zhoršili stav jezera o %d", gatheredMoney, HARVEST_POLLUTION)
 			}
 		},
 	},
@@ -213,7 +213,7 @@ var actionsDef = map[int]ActionDef{
 			if globalState > 0 {
 				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
 			}
-			return cleaning, 0, fmt.Sprintf("Zlepšili jste hnojením stav skleníku o %d", cleaning)
+			return cleaning, 0, fmt.Sprintf("Zlepšili jste čištěním stav jezera o %d", cleaning)
 		},
 	},
 
