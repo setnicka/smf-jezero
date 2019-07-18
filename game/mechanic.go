@@ -16,7 +16,7 @@ import (
 // Game mechanic
 
 const (
-	tcp_visualizator = "192.168.42.153:4242"
+	tcp_visualizator = "192.168.1.101:4242"
 
 	// Game constants
 	DEFAULT_GLOBAL_STATE = 100
@@ -236,7 +236,9 @@ var actionsDef = map[int]ActionDef{
 			} else {
 				results := []string{}
 				for team, action := range actions {
-					results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", s.GetTeam(team).Name, actionsNames[action]))
+					if s.GetTeam(team) != nil {
+						results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", s.GetTeam(team).Name, actionsNames[action]))
+					}
 				}
 				return 0, -SPIONAGE_COST, fmt.Sprintf("Špionáž úspěšná, zjištěno:<ul>\n%s\n</ul>", strings.Join(results, "\n"))
 			}
