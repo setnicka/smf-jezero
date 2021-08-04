@@ -50,25 +50,31 @@
 </form>
 </div>
 
-{{$allActions := .AllActions}}
-{{$history := .History}}
-
 <h2>Historie kol</h2>
 
 <table class="table table-bordered" id="history">
 <thead>
-	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{len .Teams}}">Peníze a akce</th></tr>
-	<tr>{{range .Teams}}<th colspan="2">{{.}}</th>{{end}}</tr>
+	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{mult 2 (len .Teams)}}">Peníze a akce</th></tr>
+	<tr>{{ $prevPart := "" }}{{range .Teams}}
+		<th {{ if ne $prevPart .Part}}style="border-left: 2px solid #444444;"{{ $prevPart = .Part }}{{end}} colspan="2">{{.Name}} ({{.Part}})</th>
+	{{end}}</tr>
 </thead>
 <tbody>
 	<tr class="info"><th>NOW</th><td>{{.CurrentState}}</td>
-		{{range .CurrentActions}}<td></td><td>{{(index $allActions .).DisplayName}}</td>{{end}}
+		{{ $prevPart := "" }}
+		{{ range .CurrentActions }}
+			<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}></td>
+			<td>{{(index $.AllActions .Action).DisplayName}}</td>
+		{{ end }}
 	</tr>
 	{{range .History}}
-		<tr><th>{{.RoundNumber}}</th><td>{{.StartState}} -> {{.FinalState}}</td>
+		<tr><th>{{.RoundNumber}}</th><td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{.StartState}} ⇛ {{.FinalState}}</span></td>
+			{{ $prevPart := "" }}
 			{{range .Teams}}
-				<td>{{if .Found}}{{.StartMoney}} -> {{.FinalMoney}}{{end}}</td>
-				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $allActions .Action).DisplayName}}</span></td>
+				<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}>
+					{{- if .Found}}{{.StartMoney}} -> {{.FinalMoney}}{{end -}}
+				</td>
+				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $.AllActions .Action).DisplayName}}</span></td>
 			{{end}}
 		</tr>
 	{{end}}
@@ -103,10 +109,10 @@
 			datasets: [
 			{{range $i, $team := .Teams}}
 				{
-					label: '{{$team}}',
+					label: '{{$team.Name}}',
 					backgroundColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
 					borderColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
-					data: [{{range $history}}{{(index .Teams $i).FinalMoney}},{{end}}].reverse(),
+					data: [{{range $.History}}{{(index .Teams $i).FinalMoney}},{{end}}].reverse(),
 					fill: false,
 				},
 			{{end}}
@@ -114,7 +120,7 @@
 				label: 'JEZERO',
 				backgroundColor: window.chartColors.red,
 				borderColor: window.chartColors.red,
-				data: [{{range $history}}{{.FinalState}},{{end}}].reverse(),
+				data: [{{range $.History}}{{.FinalState}},{{end}}].reverse(),
 				fill: true,
 			}]
 		},

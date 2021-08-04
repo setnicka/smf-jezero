@@ -58,6 +58,10 @@ type roundState struct {
 	Time          time.Time
 }
 
+func (rs roundState) RoundNumber() int {
+	return rs.Number + 1
+}
+
 type teamState struct {
 	Action  int
 	Message template.HTML

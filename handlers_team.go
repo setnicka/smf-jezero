@@ -14,21 +14,23 @@ func getRoundHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type teamHistoryRecord struct {
-	RoundNumber int
-	StartState  int
-	StartMoney  int
-	Action      int
-	FinalState  int
-	FinalMoney  int
-	Message     template.HTML
+	RoundNumber   int
+	StartState    game.GlobalState
+	StartMoney    int
+	Action        int
+	FinalState    game.GlobalState
+	FinalMoney    int
+	Message       template.HTML
+	GlobalMessage template.HTML
 }
 
 type teamIndexData struct {
 	GeneralData
 
-	TeamName       string
+	Team           *game.Team
 	RoundNumber    int
-	GlobalState    int
+	GlobalState    game.GlobalState
+	GlobalMessage  template.HTML
 	Money          int
 	GameMessage    template.HTML
 	SelectedAction int
@@ -54,7 +56,7 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 			actionNumber, _ := strconv.Atoi(r.PostFormValue("setAction"))
 			if action, found := game.GetActions()[actionNumber]; found {
 				// Check if action could be performed
-				if action.Check(currentState.GlobalState, money) {
+				if action.Check(currentState.GlobalState[team.Part], money) {
 					server.state.CurrentActions[team.Login] = actionNumber
 					server.state.Save()
 					setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Akce '%s' nastavena", action.DisplayName)})
@@ -70,17 +72,19 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := teamIndexData{GeneralData: getGeneralData("Hra", w, r)}
-	defer func() { executeTemplate(w, "teamIndex", data) }()
-
-	data.RoundNumber = currentState.Number + 1
-	data.GlobalState = currentState.GlobalState
-	data.GameMessage = ""
-
+	data := teamIndexData{
+		GeneralData:   getGeneralData("Hra", w, r),
+		Team:          team,
+		RoundNumber:   currentState.RoundNumber(),
+		GlobalState:   currentState.GlobalState,
+		GlobalMessage: currentState.GlobalMessage,
+		Actions:       game.GetActions(),
+	}
 	if currentStateTeam, found := currentState.Teams[team.Login]; found {
 		data.Money = currentStateTeam.Money
 		data.GameMessage = currentStateTeam.Message
 	}
+	data.SelectedAction, _ = server.state.CurrentActions[team.Login]
 
 	// Construct history records
 	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
@@ -88,9 +92,10 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		lastRound := server.state.Rounds[i-1]
 
 		record := teamHistoryRecord{
-			RoundNumber: currentRound.Number,
-			StartState:  lastRound.GlobalState,
-			FinalState:  currentRound.GlobalState,
+			RoundNumber:   currentRound.Number,
+			StartState:    lastRound.GlobalState,
+			FinalState:    currentRound.GlobalState,
+			GlobalMessage: currentRound.GlobalMessage,
 		}
 
 		if teamState, found := currentRound.Teams[team.Login]; found {
@@ -105,7 +110,5 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		data.History = append(data.History, record)
 	}
 
-	data.TeamName = team.Name
-	data.Actions = game.GetActions()
-	data.SelectedAction, _ = server.state.CurrentActions[team.Login]
+	executeTemplate(w, "teamIndex", data)
 }

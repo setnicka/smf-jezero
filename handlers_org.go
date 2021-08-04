@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 
 	//"github.com/coreos/go-log/log"
 
@@ -38,7 +39,7 @@ func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 type orgTeamsData struct {
 	GeneralData
-	Teams map[string]game.Team
+	Teams []game.Team
 }
 
 func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +59,19 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 				setFlashMessage(w, r, FlashMessage{"success", "Password set"})
 			}
 		} else if r.PostFormValue("newTeamLogin") != "" {
-			err := server.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"))
+			var part game.GamePart
+			switch r.PostFormValue("newTeamPart") {
+			case string(game.PartA):
+				part = game.PartA
+			case string(game.PartB):
+				part = game.PartB
+			default:
+				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Part '%s' is not valid game part", r.PostFormValue("newTeamPart"))})
+				http.Redirect(w, r, "teams", http.StatusSeeOther)
+				return
+			}
+
+			err := server.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"), part)
 			if err == nil {
 				setFlashMessage(w, r, FlashMessage{"success", "Team added"})
 			} else {
@@ -70,35 +83,46 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := orgTeamsData{GeneralData: getGeneralData("Týmy", w, r)}
-	defer func() { executeTemplate(w, "orgTeams", data) }()
-
-	data.Teams = map[string]game.Team{}
-	for _, team := range server.state.GetTeams() {
-		data.Teams[team.Login] = team
-	}
+	teams := server.state.GetTeams()
+	sort.Slice(teams, func(i, j int) bool {
+		if teams[i].Part == teams[j].Part {
+			return teams[i].Name < teams[j].Name
+		}
+		return teams[i].Part < teams[j].Part
+	})
+	executeTemplate(w, "orgTeams", orgTeamsData{
+		GeneralData: getGeneralData("Teams", w, r),
+		Teams:       teams,
+	})
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+type currentAction struct {
+	Action int
+	Team   game.Team
+}
+
 type orgDashboardData struct {
 	GeneralData
-	Teams          []string
+	Teams          []game.Team
 	RoundNumber    int
-	CurrentState   int
-	CurrentActions []int
+	CurrentState   game.GlobalState
+	CurrentActions []currentAction
 	History        []orgDashboardRoundRecord
 	AllActions     map[int]game.ActionDef
 }
 
 type orgDashboardRoundRecord struct {
 	RoundNumber int
-	StartState  int
-	FinalState  int
+	StartState  game.GlobalState
+	FinalState  game.GlobalState
+	Message     template.HTML
 	Teams       []orgDashboardTeamRecord
 }
 
 type orgDashboardTeamRecord struct {
+	Team       game.Team
 	Found      bool
 	StartMoney int
 	Action     int
@@ -138,15 +162,23 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	defer func() { executeTemplate(w, "orgDashboard", data) }()
 
 	allTeams := server.state.GetTeams()
+	sort.Slice(allTeams, func(i, j int) bool {
+		if allTeams[i].Part == allTeams[j].Part {
+			return allTeams[i].Name < allTeams[j].Name
+		}
+		return allTeams[i].Part < allTeams[j].Part
+	})
 
 	data.AllActions = game.GetActions()
 	data.RoundNumber = server.state.GetRoundNumber()
 	data.CurrentState = server.state.GetLastState().GlobalState
-	data.Teams = []string{}
-	data.CurrentActions = []int{}
+	data.CurrentActions = []currentAction{}
+	data.Teams = allTeams
 	for _, team := range allTeams {
-		data.Teams = append(data.Teams, team.Name)
-		data.CurrentActions = append(data.CurrentActions, server.state.CurrentActions[team.Login])
+		data.CurrentActions = append(data.CurrentActions, currentAction{
+			Action: server.state.CurrentActions[team.Login],
+			Team:   team,
+		})
 	}
 
 	// Construct history records
@@ -159,11 +191,13 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			RoundNumber: currentRound.Number,
 			StartState:  lastRound.GlobalState,
 			FinalState:  currentRound.GlobalState,
+			Message:     currentRound.GlobalMessage,
 			Teams:       []orgDashboardTeamRecord{},
 		}
 
 		for _, team := range allTeams {
 			teamRecord := orgDashboardTeamRecord{}
+			teamRecord.Team = team
 
 			if teamState, found := currentRound.Teams[team.Login]; found {
 				teamRecord.Found = true

@@ -57,11 +57,11 @@ func (s *State) GetTeam(login string) *Team {
 	return nil
 }
 
-func (s *State) AddTeam(login string, name string) error {
+func (s *State) AddTeam(login string, name string, part GamePart) error {
 	if s.GetTeam(login) != nil {
 		return fmt.Errorf("Team with name '%s' already exists", login)
 	}
-	s.Teams = append(s.Teams, Team{Login: login, Name: name})
+	s.Teams = append(s.Teams, Team{Login: login, Name: name, Part: part})
 	s.Save()
 	return nil
 }
