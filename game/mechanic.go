@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"math"
 	"net"
-	"strconv"
 	"strings"
 	"time"
 
@@ -54,10 +53,13 @@ func (s *State) InitGame() {
 
 	// 1. Prepare init round
 	initRound := &roundState{
-		Number:      0,
-		GlobalState: DEFAULT_GLOBAL_STATE,
-		Time:        time.Now(),
-		Teams:       map[string]teamState{},
+		Number: 0,
+		GlobalState: map[GamePart]int{
+			PartA: DEFAULT_GLOBAL_STATE,
+			PartB: DEFAULT_GLOBAL_STATE,
+		},
+		Time:  time.Now(),
+		Teams: map[string]teamState{},
 	}
 
 	// 2. Reset actions
@@ -114,8 +116,9 @@ func (s *State) EndRound() error {
 func (s *State) SendState() error {
 	if conn, err := net.DialTimeout("tcp", tcp_visualizator, time.Second); err == nil {
 		defer conn.Close()
-		fmt.Fprintf(conn, strconv.Itoa(s.GetLastState().GlobalState)+"\n")
-		fmt.Fprintf(conn, "k"+strconv.Itoa(s.GetRoundNumber())+"\n")
+		gs := s.GetLastState().GlobalState
+		fmt.Fprintf(conn, "%d,%d\n", gs[PartA], gs[PartB])
+		fmt.Fprintf(conn, "k%d\n", s.GetRoundNumber())
 		return nil
 	} else {
 		return err
@@ -128,9 +131,19 @@ func (s *State) calculateRound(previousRound *roundState, actions map[string]int
 	// 1. Prepare new round struct
 	newRound := &roundState{
 		Number:      roundNumber,
-		GlobalState: previousRound.GlobalState,
+		GlobalState: previousRound.GlobalState.copy(),
 		Teams:       map[string]teamState{},
 		Time:        time.Now(),
+	}
+
+	actionsByPart := map[GamePart]map[string]int{
+		PartA: {},
+		PartB: {},
+	}
+	for _, team := range s.Teams {
+		if action, found := actions[team.Login]; found {
+			actionsByPart[team.Part][team.Login] = action
+		}
 	}
 
 	// 2. Do actions for all teams
@@ -143,17 +156,30 @@ func (s *State) calculateRound(previousRound *roundState, actions map[string]int
 		var globalDiff, teamMoneyDiff int
 		var message string
 		if actionDef.action != nil {
-			globalDiff, teamMoneyDiff, message = actionDef.action(s, previousRound.GlobalState, previousMoney, actions)
+			globalDiff, teamMoneyDiff, message = actionDef.action(s, previousRound.GlobalState[team.Part], previousMoney, actionsByPart[team.Part])
 		}
 
 		// 2.3 Save results
 		log.Debugf("[Round %d - team '%s'] Action '%s': Global state change %d, money change %d", newRound.Number, team.Name, actionDef.DisplayName, globalDiff, teamMoneyDiff)
-		newRound.GlobalState += globalDiff
+		newRound.GlobalState[team.Part] += globalDiff
 		newRound.Teams[team.Login] = teamState{
 			Action:  actionID,
 			Money:   previousMoney + teamMoneyDiff,
 			Message: template.HTML(message),
 		}
+	}
+
+	// 3. Compare parts
+	d := math.Abs(float64(newRound.GlobalState[PartA] - newRound.GlobalState[PartB]))
+	change := int(math.Round(d*d/600 + d/20))
+	if change > 0 && newRound.GlobalState[PartA] > newRound.GlobalState[PartB] {
+		newRound.GlobalState[PartA] -= change
+		newRound.GlobalState[PartB] += change
+		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z jezera B do jezera A se přelilo %d znečištění.", change))
+	} else if change > 0 {
+		newRound.GlobalState[PartA] += change
+		newRound.GlobalState[PartB] -= change
+		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z jezera A do jezera B se přelilo %d znečištění.", change))
 	}
 
 	return newRound
