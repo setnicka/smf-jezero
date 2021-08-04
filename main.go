@@ -74,12 +74,12 @@ func (s *Server) Start() {
 	router.HandleFunc("/org/teams", authOrg(orgTeamsHandler))
 	router.HandleFunc("/org/dashboard", authOrg(orgDashboardHandler))
 	router.HandleFunc("/org/charts", authOrg(orgChartsHandler))
+	router.HandleFunc("/org/getHash", authOrg(orgHashHandler))
 
 	// Teams handlers
 	router.HandleFunc("/login", loginHandler)
 	router.HandleFunc("/", auth(s, teamIndexHandler))
-
-	router.HandleFunc("/getRound", getRoundHandler)
+	router.HandleFunc("/getHash", auth(s, teamHashHandler))
 
 	// 2. Load templates
 	if _, err := s.getTemplates(); err != nil {

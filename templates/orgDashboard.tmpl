@@ -1,11 +1,20 @@
 {{ define "orgDashboard" }}
 {{ template "part_org_header" . }}
 
-<h1 style="text-align: center;">Stav jezera: {{.CurrentState}}</h1>
-<div id="roundNumber">Kolo: {{.RoundNumber}}</div>
+<script type="text/javascript">
+	function checkHash() {
+		var round = httpGet("getHash");
+		if (round != "{{.Hash}}") {
+			window.location.reload();
+		}
+	}
+	setInterval(checkHash, 1000);
+</script>
 
-{{ if .CountdownActive }}
-	<h2 style="text-align: center;">Další kolo za <span id="countdown">{{ .CountdownSeconds }}</span></h2>
+<h1 class="text-center"><small>Stav jezera</small> {{.CurrentState}}</h1>
+<h2 class="text-center"><small>Kolo</small> {{.RoundNumber}}
+{{- if .CountdownActive -}}
+	<small>, další kolo za</small> <span id="countdown">{{ .CountdownSeconds }}</span></h2>
 	<script type="text/javascript">
 	window.onload = function () {
 		startTimer({{ .CountdownSeconds }}, document.querySelector('#countdown'), function() {
@@ -13,6 +22,8 @@
 		});
 	};
 	</script>
+{{ else }}
+</h2>
 {{ end }}
 
 <div id="controls">

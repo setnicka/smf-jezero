@@ -27,6 +27,8 @@ type teamHistoryRecord struct {
 type teamIndexData struct {
 	GeneralData
 
+	Hash string
+
 	Team           *game.Team
 	RoundNumber    int
 	GlobalState    game.GlobalState
@@ -37,6 +39,11 @@ type teamIndexData struct {
 
 	History []teamHistoryRecord
 	Actions map[int]game.ActionDef
+}
+
+func teamHashHandler(w http.ResponseWriter, r *http.Request) {
+	team := server.state.GetTeam(getUser(r))
+	w.Write([]byte(calcTeamHash(team)))
 }
 
 func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +81,7 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := teamIndexData{
 		GeneralData:   getGeneralData("Hra", w, r),
+		Hash:          calcTeamHash(team),
 		Team:          team,
 		RoundNumber:   currentState.RoundNumber(),
 		GlobalState:   currentState.GlobalState,

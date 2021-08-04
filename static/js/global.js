@@ -1,3 +1,10 @@
+function httpGet(theUrl) {
+	var xmlHttp = new XMLHttpRequest();
+	xmlHttp.open("GET", theUrl, false); // false for synchronous request
+	xmlHttp.send(null);
+	return xmlHttp.responseText;
+}
+
 // source: https://stackoverflow.com/a/20618517
 function startTimer(duration, display, callback=null) {
 	var start = Date.now(),

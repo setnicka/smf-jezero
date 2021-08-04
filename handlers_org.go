@@ -39,6 +39,10 @@ func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+func orgHashHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(calcOrgHash()))
+}
+
 type orgTeamsData struct {
 	GeneralData
 	Teams []game.Team
@@ -107,6 +111,7 @@ type currentAction struct {
 
 type orgDashboardData struct {
 	GeneralData
+	Hash           string
 	Teams          []game.Team
 	RoundNumber    int
 	CurrentState   game.GlobalState
@@ -240,6 +245,7 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := orgDashboardData{
 		GeneralData: getGeneralData("Stav hry", w, r),
+		Hash:        calcOrgHash(),
 		Teams:       teams,
 
 		AllActions:     game.GetActions(),

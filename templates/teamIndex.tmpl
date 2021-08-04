@@ -1,15 +1,6 @@
 {{ define "teamIndex" }}
-<!DOCTYPE html>
-<html>
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ .Title }}</title>
-  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
-  <link rel="stylesheet" type="text/css" href="/static/css/funkyradio.css">
-  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
-  <!--<meta http-equiv="refresh" content="5">-->
-</head>
-<body>
+{{ template "part_header" . }}
+
 <style type="text/css" media="screen">
 #teamName {
 	text-align: center;
@@ -24,21 +15,13 @@ h1, h2, h3 {
 </style>
 
 <script type="text/javascript">
-function httpGet(theUrl) {
-	var xmlHttp = new XMLHttpRequest();
-	xmlHttp.open("GET", theUrl, false); // false for synchronous request
-	xmlHttp.send(null);
-	return xmlHttp.responseText;
-}
-
-function checkNewRound() {
-	var round = httpGet("getRound");
-	if (round != "{{.RoundNumber}}") {
-		window.location.reload(false);
+function checkHash() {
+	var round = httpGet("getHash");
+	if (round != "{{.Hash}}") {
+		window.location.reload();
 	}
 }
-
-setInterval(checkNewRound, 1000);
+setInterval(checkHash, 1000);
 </script>
 
 

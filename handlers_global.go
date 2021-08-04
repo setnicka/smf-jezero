@@ -4,9 +4,12 @@ import (
 	"encoding/gob"
 	"math"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/coreos/go-log/log"
+	"github.com/setnicka/smf-jezero/game"
 )
 
 func getGeneralData(title string, w http.ResponseWriter, r *http.Request) GeneralData {
@@ -88,4 +91,38 @@ func getFlashMessages(w http.ResponseWriter, r *http.Request) []FlashMessage {
 	}
 
 	return parsedFlashes
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+func calcGlobalHash() []string {
+	currentState := server.state.GetLastState()
+
+	return []string{
+		strconv.Itoa(currentState.RoundNumber()),
+		currentState.GlobalState.String(),
+		strconv.FormatInt(server.countdownTo.Unix(), 10),
+	}
+}
+
+func calcTeamHash(team *game.Team) string {
+	hash := calcGlobalHash()
+
+	actions := server.state.CurrentActions
+	if action, found := actions[team.Login]; found {
+		hash = append(hash, strconv.Itoa(action))
+	}
+	return strings.Join(hash, "-")
+}
+
+func calcOrgHash() string {
+	hash := calcGlobalHash()
+
+	actions := server.state.CurrentActions
+	for _, team := range server.state.Teams {
+		if action, found := actions[team.Login]; found {
+			hash = append(hash, strconv.Itoa(action))
+		}
+	}
+	return strings.Join(hash, "-")
 }
