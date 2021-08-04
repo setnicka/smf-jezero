@@ -46,10 +46,21 @@ setInterval(checkNewRound, 1000);
 
 {{ $ourState := index .GlobalState .Team.Part }}
 
-<div id="teamName">Tým: {{.Team.Name}}</div>
-<h1><small>Stav:</small> {{.GlobalState}}</h1>
-<h3><small>Vaše polovina:</small> {{.Team.Part}} ({{ $ourState }})</h3>
-<h3><small>Kolo:</small> {{.RoundNumber}}</h3>
+<div id="teamName">Tým <b>{{.Team.Name}}</b> v části <b>{{.Team.Part}}</b></div>
+<h1><small>Stav jezera</small> {{.GlobalState}}</h1>
+<h3><small>Kolo</small> {{.RoundNumber -}}
+{{- if .CountdownActive -}}
+	<small>, další kolo za</small> <span id="countdown">{{ .CountdownSeconds }}</span></h3>
+	<script type="text/javascript">
+	window.onload = function () {
+		startTimer({{ .CountdownSeconds }}, document.querySelector('#countdown'), function() {
+			window.location.reload()
+		});
+	};
+	</script>
+{{ else}}
+</h3>
+{{ end }}
 
 <div class="input-group">
   <span class="input-group-addon"><b>ZEĎcoinů:</b></span>

@@ -4,19 +4,35 @@
 <h1 style="text-align: center;">Stav jezera: {{.CurrentState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>
 
+{{ if .CountdownActive }}
+	<h2 style="text-align: center;">Další kolo za <span id="countdown">{{ .CountdownSeconds }}</span></h2>
+	<script type="text/javascript">
+	window.onload = function () {
+		startTimer({{ .CountdownSeconds }}, document.querySelector('#countdown'), function() {
+			window.location.reload()
+		});
+	};
+	</script>
+{{ end }}
 
 <div id="controls">
-{{ template "part_messageBox" . }}
-
-<form method="post">
-	<input type="submit" class="btn btn-primary btn-block" onclick="return confirm('Ukončit kolo?');" name="calculateRound" value="Ukončit kolo">
-</form>
-<form method="post" style="margin-top: 4px;">
-	<input type="submit" class="btn btn-danger btn-block" onclick="return confirm('Pozot! Toto vymaže všechny kola, pokračovat?');" name="resetGame" value="Resetovat hru">
-</form>
-<form method="post" style="margin-top: 4px;">
-	<input type="submit" class="btn btn-default btn-block" name="sendState" value="Znovuposlat stav vizualizátoru">
-</form>
+	{{ template "part_messageBox" . }}
+	<form method="post">
+		<input type="submit" class="btn btn-primary btn-block" onclick="return confirm('Ukončit kolo?');" name="calculateRound" value="Ukončit kolo">
+	</form>
+	<form method="post" style="margin-top: 4px;">
+		<input type="submit" class="btn btn-danger btn-block" onclick="return confirm('Pozot! Toto vymaže všechny kola, pokračovat?');" name="resetGame" value="Resetovat hru">
+	</form>
+	<form method="post" style="margin-top: 4px;">
+		<input type="submit" class="btn btn-default btn-block" name="sendState" value="Znovuposlat stav vizualizátoru">
+	</form>
+	<form method="post" style="margin-top: 4px;">
+		Odpočet: <input type="number" name="countdown" value="120" min="1" size="6">
+		<div class="btn-group">
+			<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit">
+			<input type="submit" class="btn btn-warning" name="submit-time-stop" value="Zastavit">
+		</div>
+	</form>
 </div>
 
 <h2>Historie kol</h2>

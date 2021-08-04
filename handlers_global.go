@@ -2,14 +2,18 @@ package main
 
 import (
 	"encoding/gob"
+	"math"
 	"net/http"
+	"time"
 
 	"github.com/coreos/go-log/log"
 )
 
 func getGeneralData(title string, w http.ResponseWriter, r *http.Request) GeneralData {
 	data := GeneralData{
-		Title: title,
+		Title:            title,
+		CountdownActive:  !server.countdownTo.IsZero(),
+		CountdownSeconds: int(math.Ceil(server.countdownTo.Sub(time.Now()).Seconds())),
 	}
 	if flashMessages := getFlashMessages(w, r); len(flashMessages) > 0 {
 		data.MessageType = flashMessages[0].Type

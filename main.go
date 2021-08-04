@@ -3,6 +3,8 @@ package main
 import (
 	"html/template"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/coreos/go-log/log"
 	"github.com/gorilla/mux"
@@ -23,9 +25,13 @@ const (
 )
 
 type Server struct {
-	sessionStore sessions.Store
-	templates    *template.Template
-	state        *game.State
+	sessionStore      sessions.Store
+	templates         *template.Template
+	state             *game.State
+	countdownDuration time.Duration
+	countdownTo       time.Time
+	countdownTimer    *time.Timer
+	mutex             sync.RWMutex
 }
 
 // Global singleton
@@ -39,9 +45,11 @@ func main() {
 	//cookieStore.Options.Domain = ".fuf.me"
 
 	server = &Server{
-		sessionStore: cookieStore,
-		state:        game.Init(),
+		sessionStore:   cookieStore,
+		state:          game.Init(),
+		countdownTimer: time.NewTimer(time.Hour),
 	}
+	server.countdownTimer.Stop() // by default stop the timer, but we need to initialize it
 
 	server.Start()
 }
@@ -79,9 +87,34 @@ func (s *Server) Start() {
 		return
 	}
 
-	// 3. Listen on given port
+	// 3. Start countdown timer
+	go func() {
+		for range s.countdownTimer.C {
+			s.mutex.Lock()
+			log.Infof("Next round by timer")
+			server.state.EndRound()
+			s.resetTimer()
+			s.mutex.Unlock()
+		}
+	}()
+
+	// 4. Listen on given port
 	log.Info("Server started")
 	http.ListenAndServe(":8080", router)
+}
+
+func (s *Server) stopTimer() {
+	server.countdownTo = time.Time{}
+	s.countdownTimer.Stop()
+}
+
+func (s *Server) resetTimer() {
+	if s.countdownDuration == 0 {
+		return
+	}
+	s.stopTimer()
+	s.countdownTo = time.Now().Add(s.countdownDuration)
+	s.countdownTimer.Reset(s.countdownDuration)
 }
 
 func auth(server *Server, handle http.HandlerFunc, renewAuth ...bool) http.HandlerFunc {

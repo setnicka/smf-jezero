@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"net/http"
 	"sort"
+	"strconv"
+	"time"
 
 	//"github.com/coreos/go-log/log"
 
@@ -175,13 +177,21 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("calculateRound") != "" {
-			setFlashMessage(w, r, FlashMessage{"success", "Kolo spočítáno, výsledky níže"})
+			server.mutex.Lock()
+			server.stopTimer()
 			server.state.EndRound()
+			server.mutex.Unlock()
+
+			setFlashMessage(w, r, FlashMessage{"success", "Kolo spočítáno, výsledky níže"})
 		}
 
 		if r.PostFormValue("resetGame") != "" {
-			setFlashMessage(w, r, FlashMessage{"success", "Hra resetována"})
+			server.mutex.Lock()
+			server.stopTimer()
 			server.state.InitGame()
+			server.mutex.Unlock()
+
+			setFlashMessage(w, r, FlashMessage{"success", "Hra resetována"})
 		}
 
 		if r.PostFormValue("sendState") != "" {
@@ -190,6 +200,30 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			} else {
 				setFlashMessage(w, r, FlashMessage{"warning", fmt.Sprintf("Chyba při posílání stavu: %v", err)})
 			}
+		}
+
+		if r.PostFormValue("submit-time-start") != "" && r.PostFormValue("countdown") != "" {
+			seconds, err := strconv.Atoi(r.PostFormValue("countdown"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			} else if seconds <= 0 {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			server.mutex.Lock()
+			server.countdownDuration = time.Duration(seconds) * time.Second
+			server.resetTimer()
+			server.mutex.Unlock()
+
+			setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Odpočet spuštěn, další kolo za %v", server.countdownDuration)})
+		}
+		if r.PostFormValue("submit-time-stop") != "" {
+			server.mutex.Lock()
+			server.stopTimer()
+			server.mutex.Unlock()
+
+			setFlashMessage(w, r, FlashMessage{"success", "Odpočet zastaven"})
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
