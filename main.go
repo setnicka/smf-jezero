@@ -65,6 +65,7 @@ func (s *Server) Start() {
 	router.HandleFunc("/org/login", orgLoginHandler)
 	router.HandleFunc("/org/teams", authOrg(orgTeamsHandler))
 	router.HandleFunc("/org/dashboard", authOrg(orgDashboardHandler))
+	router.HandleFunc("/org/charts", authOrg(orgChartsHandler))
 
 	// Teams handlers
 	router.HandleFunc("/login", loginHandler)

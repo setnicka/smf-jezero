@@ -91,7 +91,7 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 		return teams[i].Part < teams[j].Part
 	})
 	executeTemplate(w, "orgTeams", orgTeamsData{
-		GeneralData: getGeneralData("Teams", w, r),
+		GeneralData: getGeneralData("Týmy", w, r),
 		Teams:       teams,
 	})
 }
@@ -130,6 +130,44 @@ type orgDashboardTeamRecord struct {
 	Message    template.HTML
 }
 
+// Construct history records for teams in given order
+func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
+	history := []orgDashboardRoundRecord{}
+
+	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
+		currentRound := server.state.Rounds[i]
+		lastRound := server.state.Rounds[i-1]
+
+		record := orgDashboardRoundRecord{
+			RoundNumber: currentRound.Number,
+			StartState:  lastRound.GlobalState,
+			FinalState:  currentRound.GlobalState,
+			Message:     currentRound.GlobalMessage,
+			Teams:       []orgDashboardTeamRecord{},
+		}
+
+		for _, team := range teams {
+			teamRecord := orgDashboardTeamRecord{}
+			teamRecord.Team = team
+
+			if teamState, found := currentRound.Teams[team.Login]; found {
+				teamRecord.Found = true
+				teamRecord.Action = teamState.Action
+				teamRecord.FinalMoney = teamState.Money
+				teamRecord.Message = teamState.Message
+			}
+			if lastTeamState, found := lastRound.Teams[team.Login]; found {
+				teamRecord.StartMoney = lastTeamState.Money
+			}
+
+			record.Teams = append(record.Teams, teamRecord)
+		}
+
+		history = append(history, record)
+	}
+	return history
+}
+
 func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
@@ -158,61 +196,54 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := orgDashboardData{GeneralData: getGeneralData("Org dashboard", w, r)}
-	defer func() { executeTemplate(w, "orgDashboard", data) }()
-
-	allTeams := server.state.GetTeams()
-	sort.Slice(allTeams, func(i, j int) bool {
-		if allTeams[i].Part == allTeams[j].Part {
-			return allTeams[i].Name < allTeams[j].Name
+	teams := server.state.GetTeams()
+	sort.Slice(teams, func(i, j int) bool {
+		if teams[i].Part == teams[j].Part {
+			return teams[i].Name < teams[j].Name
 		}
-		return allTeams[i].Part < allTeams[j].Part
+		return teams[i].Part < teams[j].Part
 	})
 
-	data.AllActions = game.GetActions()
-	data.RoundNumber = server.state.GetRoundNumber()
-	data.CurrentState = server.state.GetLastState().GlobalState
-	data.CurrentActions = []currentAction{}
-	data.Teams = allTeams
-	for _, team := range allTeams {
+	data := orgDashboardData{
+		GeneralData: getGeneralData("Stav hry", w, r),
+		Teams:       teams,
+
+		AllActions:     game.GetActions(),
+		RoundNumber:    server.state.GetRoundNumber(),
+		CurrentState:   server.state.GetLastState().GlobalState,
+		CurrentActions: []currentAction{},
+		History:        getHistoryRecords(teams),
+	}
+	for _, team := range teams {
 		data.CurrentActions = append(data.CurrentActions, currentAction{
 			Action: server.state.CurrentActions[team.Login],
 			Team:   team,
 		})
 	}
 
-	// Construct history records
-	data.History = []orgDashboardRoundRecord{}
-	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
-		currentRound := server.state.Rounds[i]
-		lastRound := server.state.Rounds[i-1]
+	executeTemplate(w, "orgDashboard", data)
+}
 
-		record := orgDashboardRoundRecord{
-			RoundNumber: currentRound.Number,
-			StartState:  lastRound.GlobalState,
-			FinalState:  currentRound.GlobalState,
-			Message:     currentRound.GlobalMessage,
-			Teams:       []orgDashboardTeamRecord{},
+///////
+
+type orgChartsData struct {
+	GeneralData
+	Teams   []game.Team
+	History []orgDashboardRoundRecord
+}
+
+func orgChartsHandler(w http.ResponseWriter, r *http.Request) {
+	teams := server.state.GetTeams()
+	sort.Slice(teams, func(i, j int) bool {
+		if teams[i].Part == teams[j].Part {
+			return teams[i].Name < teams[j].Name
 		}
+		return teams[i].Part < teams[j].Part
+	})
 
-		for _, team := range allTeams {
-			teamRecord := orgDashboardTeamRecord{}
-			teamRecord.Team = team
-
-			if teamState, found := currentRound.Teams[team.Login]; found {
-				teamRecord.Found = true
-				teamRecord.Action = teamState.Action
-				teamRecord.FinalMoney = teamState.Money
-				teamRecord.Message = teamState.Message
-			}
-			if lastTeamState, found := lastRound.Teams[team.Login]; found {
-				teamRecord.StartMoney = lastTeamState.Money
-			}
-
-			record.Teams = append(record.Teams, teamRecord)
-		}
-
-		data.History = append(data.History, record)
-	}
-
+	executeTemplate(w, "orgCharts", orgChartsData{
+		GeneralData: getGeneralData("Grafy", w, r),
+		Teams:       teams,
+		History:     getHistoryRecords(teams),
+	})
 }

@@ -1,0 +1,81 @@
+{{ define "orgCharts" }}
+{{ template "part_org_header" . }}
+
+<h1>Grafy</h1>
+
+<script src="/static/js/charts.js" type="text/javascript" charset="utf-8"></script>
+
+<div style="width:75%; margin: 0px auto;">
+	<canvas id="canvas"></canvas>
+</div>
+<script>
+	window.chartColors = {
+		red: 'rgb(255, 99, 132)',
+		orange: 'rgb(255, 159, 64)',
+		yellow: 'rgb(255, 205, 86)',
+		green: 'rgb(75, 192, 192)',
+		blue: 'rgb(54, 162, 235)',
+		purple: 'rgb(153, 102, 255)',
+		grey: 'rgb(201, 203, 207)'
+	};
+
+	var colorNames = Object.keys(window.chartColors);
+	var config = {
+		type: 'line',
+		data: {
+			labels: [{{range .History}}'{{.RoundNumber}}',{{end}}].reverse(),
+			datasets: [
+			{{range $i, $team := .Teams}}
+				{
+					label: '{{$team.Part}} - {{$team.Name}}',
+					backgroundColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
+					borderColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
+					data: [{{range $.History}}{{(index .Teams $i).FinalMoney}},{{end}}].reverse(),
+					fill: false,
+				},
+			{{end}}
+			{
+				label: 'JEZERO',
+				backgroundColor: window.chartColors.red,
+				borderColor: window.chartColors.red,
+				data: [{{range $.History}}{{.FinalState}},{{end}}].reverse(),
+				fill: true,
+			}]
+		},
+		options: {
+			responsive: true,
+			tooltips: {
+				mode: 'index',
+				intersect: false,
+			},
+			hover: {
+				mode: 'nearest',
+				intersect: true
+			},
+			scales: {
+				xAxes: [{
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'Kolo'
+					}
+				}],
+				yAxes: [{
+					display: true,
+					scaleLabel: {
+						display: true,
+						labelString: 'ZEĎcoinů'
+					}
+				}]
+			}
+		}
+	};
+
+	window.onload = function() {
+		var ctx = document.getElementById('canvas').getContext('2d');
+		window.myLine = new Chart(ctx, config);
+	};
+</script>
+
+
+{{ end }}
