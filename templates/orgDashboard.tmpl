@@ -1,36 +1,5 @@
 {{ define "orgDashboard" }}
-{{ template "part_header" . }}
-
-<style type="text/css">
-	#dashboard td{
-		text-align: center;
-	}
-	#dashboard td {
-		opacity: 0.5;
-	}
-	#dashboard td.success {
-		border: 2px solid green;
-		opacity: 1;
-	}
-
-	#roundNumber, #teamName {
-		text-align: center;
-		font-style: italic;
-		color: #777777;
-		margin-top: -5px;
-		margin-bottom: 5px;
-	}
-
-	#controls {
-		max-width: 400px;
-		padding: 10px;
-		margin: 0px auto;
-		border: 1px #dddddd solid;
-		border-radius: 5px;
-	}
-</style>
-
-<a href="teams" style="float: right;"><button class="btn btn-default">Teams</button></a>
+{{ template "part_org_header" . }}
 
 <h1 style="text-align: center;">Stav jezera: {{.CurrentState}}</h1>
 <div id="roundNumber">Kolo: {{.RoundNumber}}</div>

@@ -1,0 +1,83 @@
+header {
+	position: sticky;
+	top: 0;
+	background-color: #222;
+	border: 1px #222 solid;
+	z-index: 1010;
+	display: flex;
+}
+
+header {
+	position: sticky;
+	top: 0;
+	background-color: #222;
+	border: 1px #222 solid;
+	z-index: 1010;
+	display: flex;
+}
+header h1 {
+	color: white;
+	font-variant: small-caps;
+	font-size: 2em;
+	margin: auto 0px;
+	padding: auto 0px;
+	padding-right: 20px;
+	margin-right: 5px;
+	border-right: 2px #444 solid;
+}
+header h1 small {
+	color: #aaa
+}
+
+nav#main-menu {
+	display: flex;
+	flex-wrap: wrap;
+	flex-grow: 1;
+	max-width: 1170px;
+	margin: 0px auto;
+}
+
+nav#main-menu a, nav#main-menu input[type=submit] {
+	background: none;
+	border: none;
+	margin: 0px;
+	color: white;
+	font-size: 1em;
+	text-align: center;
+	padding: 14px 16px;
+	text-decoration: none;
+}
+
+nav#main-menu a:hover:not(.active), nav#main-menu input[type=submit]:hover {
+	cursor: pointer;
+	background-color: #555;
+	color: white;
+}
+
+
+#dashboard td{
+	text-align: center;
+}
+#dashboard td {
+	opacity: 0.5;
+}
+#dashboard td.success {
+	border: 2px solid green;
+	opacity: 1;
+}
+
+#roundNumber, #teamName {
+	text-align: center;
+	font-style: italic;
+	color: #777777;
+	margin-top: -5px;
+	margin-bottom: 5px;
+}
+
+#controls {
+	max-width: 400px;
+	padding: 10px;
+	margin: 0px auto;
+	border: 1px #dddddd solid;
+	border-radius: 5px;
+}

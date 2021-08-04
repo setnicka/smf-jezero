@@ -2,10 +2,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{ .Title }}</title>
-  <link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
-  <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
 </head>
 <body>
+{{- end }}
+
+{{ define "part_org_header" -}}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Org – {{ .Title }}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/org.css">
+	<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+</head>
+<body>
+
+<header>
+	<nav id="main-menu" class="container">
+		<h1><small>Jezero org</small> {{ .Title }}</h1>
+		<a href="dashboard">Stav hry</a>
+		<a href="charts">Grafy</a>
+		<a href="teams">Týmy</a>
+	</nav>
+</header>
+
 {{- end }}
