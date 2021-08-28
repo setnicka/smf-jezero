@@ -14,9 +14,9 @@ import (
 
 // Game mechanic
 
-const (
-	tcp_visualizator = "192.168.1.101:4242"
+var tcp_visualizators = []string{"192.168.1.117:4242", "192.168.1.103:4242"}
 
+const (
 	// Game constants
 	DEFAULT_GLOBAL_STATE = 100
 	DEFAULT_MONEY        = 100
@@ -114,15 +114,17 @@ func (s *State) EndRound() error {
 
 // SendState sends the state to the visualizator.
 func (s *State) SendState() error {
-	if conn, err := net.DialTimeout("tcp", tcp_visualizator, time.Second); err == nil {
-		defer conn.Close()
-		gs := s.GetLastState().GlobalState
-		fmt.Fprintf(conn, "%d,%d\n", gs[PartA], gs[PartB])
-		fmt.Fprintf(conn, "k%d\n", s.GetRoundNumber())
-		return nil
-	} else {
-		return err
+	for _, tcpVisualizator := range tcp_visualizators {
+		if conn, err := net.DialTimeout("tcp", tcpVisualizator, time.Second); err == nil {
+			defer conn.Close()
+			gs := s.GetLastState().GlobalState
+			fmt.Fprintf(conn, "%d;%d\n", gs[PartA], gs[PartB])
+			fmt.Fprintf(conn, "k%d\n", s.GetRoundNumber())
+		} else {
+			return err
+		}
 	}
+	return nil
 }
 
 func (s *State) calculateRound(previousRound *roundState, actions map[string]int) *roundState {
