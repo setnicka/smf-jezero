@@ -23,7 +23,7 @@ const (
 
 	ECO_POLLUTION = 1 // znečištění po ekologické výrobě
 
-	HARVEST_POLLUTION = 7 // znečištění po neekologické výrobě
+	HARVEST_POLLUTION = 5 // znečištění po neekologické výrobě
 	HARVEST_BONUS     = 100
 	HARVEST_PENALTY   = 100
 
@@ -197,8 +197,8 @@ func GetActions() map[int]ActionDef {
 
 var actionsNames = map[int]string{
 	ACTION_NOTHING:  "Nic",
-	ACTION_ECO:      "Rybolov",
-	ACTION_HARVEST:  "Průmyslový rybolov",
+	ACTION_ECO:      "Vypouštění přečištěné vody",
+	ACTION_HARVEST:  "Vypouštění přímo z kanálu",
 	ACTION_CLEANING: "Čištění",
 	ACTION_CONTROL:  "Kontrola",
 	ACTION_SPIONAGE: "Špionáž",
@@ -214,7 +214,7 @@ var actionsDef = map[int]ActionDef{
 		DisplayName:  actionsNames[ACTION_ECO],
 		DisplayClass: "",
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return -ECO_POLLUTION, globalState, fmt.Sprintf("Provedli jste normální rybolov, získali jste %d ZEĎcoinů a zhoršili stav jezera o %d", globalState, ECO_POLLUTION)
+			return -ECO_POLLUTION, globalState, fmt.Sprintf("Vypustili jste do jezera přečištěnou odpadní vodu, získáváte %d 🍉 a zhoršili jste stav jezera o %d", globalState, ECO_POLLUTION)
 		},
 	},
 
@@ -225,10 +225,10 @@ var actionsDef = map[int]ActionDef{
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> penalty
 			if inActions(ACTION_CONTROL, actions) {
-				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Váš průmyslový rybolov byl odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d ZEĎcoinů", HARVEST_PENALTY)
+				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše vypouštění přímo z kanálu bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d 🍉", HARVEST_PENALTY)
 			} else {
 				gatheredMoney := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Provedli jste průmyslový rybolov, získali jste za to %d ZEĎcoinů a zhoršili stav jezera o %d", gatheredMoney, HARVEST_POLLUTION)
+				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Vypustili jste odpadní vodu přímo z kanálu, získali jste za to %d 🍉 a zhoršili stav jezera o %d", gatheredMoney, HARVEST_POLLUTION)
 			}
 		},
 	},
@@ -249,7 +249,7 @@ var actionsDef = map[int]ActionDef{
 		DisplayName:  actionsNames[ACTION_CONTROL],
 		DisplayClass: "",
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return 0, 0, fmt.Sprintf("Požádali jsme ministerstvo o kontrolu, pokud někdo v minulém kole prováděl něco špatného, tak byl potrestán")
+			return 0, 0, fmt.Sprintf("Požádali jste o kontrolu, pokud někdo v minulém kole prováděl něco špatného, tak byl potrestán")
 		},
 	},
 
