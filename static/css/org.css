@@ -81,3 +81,7 @@ nav#main-menu a:hover:not(.active), nav#main-menu input[type=submit]:hover {
 	border: 1px #dddddd solid;
 	border-radius: 5px;
 }
+
+.hint {
+	color: #999999;
+}

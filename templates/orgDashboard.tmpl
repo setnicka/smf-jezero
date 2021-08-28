@@ -64,11 +64,15 @@
 		{{ end }}
 	</tr>
 	{{range .History}}
-		<tr><th>{{.RoundNumber}}</th><td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{.StartState}} ⇛ {{.FinalState}}</span></td>
+		{{ $n := .RoundNumber }}
+		<tr><th>{{$n}}</th>
+			<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}
+				{{if gt $n 0}}<span class="hint">{{.StartState}} ⇛ </span>{{end}}{{.FinalState}}
+			</span></td>
 			{{ $prevPart := "" }}
 			{{range .Teams}}
 				<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}>
-					{{- if .Found}}{{.StartMoney}} -> {{.FinalMoney}}{{end -}}
+					{{- if .Found}}{{if gt $n 0}}<span class="hint">{{.StartMoney}} → </span>{{end}}{{.FinalMoney}}{{end -}}
 				</td>
 				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $.AllActions .Action).DisplayName}}</span></td>
 			{{end}}

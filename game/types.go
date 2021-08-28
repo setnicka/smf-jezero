@@ -42,6 +42,9 @@ func (g GlobalState) copy() GlobalState {
 	return new
 }
 
+func (g GlobalState) GetA() int { return g[PartA] }
+func (g GlobalState) GetB() int { return g[PartB] }
+
 type Team struct {
 	Part     GamePart // to which part of the game team belongs
 	Name     string

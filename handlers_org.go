@@ -141,21 +141,26 @@ type orgDashboardTeamRecord struct {
 func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
 	history := []orgDashboardRoundRecord{}
 
-	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
+	for i := len(server.state.Rounds) - 1; i >= 0; i-- {
 		currentRound := server.state.Rounds[i]
-		lastRound := server.state.Rounds[i-1]
 
 		record := orgDashboardRoundRecord{
 			RoundNumber: currentRound.Number,
-			StartState:  lastRound.GlobalState,
 			FinalState:  currentRound.GlobalState,
 			Message:     currentRound.GlobalMessage,
 			Teams:       []orgDashboardTeamRecord{},
 		}
 
+		lastRound := currentRound
+		if i > 0 {
+			lastRound = server.state.Rounds[i-1]
+			record.StartState = lastRound.GlobalState
+		}
+
 		for _, team := range teams {
-			teamRecord := orgDashboardTeamRecord{}
-			teamRecord.Team = team
+			teamRecord := orgDashboardTeamRecord{
+				Team: team,
+			}
 
 			if teamState, found := currentRound.Teams[team.Login]; found {
 				teamRecord.Found = true
@@ -163,8 +168,10 @@ func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
 				teamRecord.FinalMoney = teamState.Money
 				teamRecord.Message = teamState.Message
 			}
-			if lastTeamState, found := lastRound.Teams[team.Login]; found {
-				teamRecord.StartMoney = lastTeamState.Money
+			if i > 0 {
+				if lastTeamState, found := lastRound.Teams[team.Login]; found {
+					teamRecord.StartMoney = lastTeamState.Money
+				}
 			}
 
 			record.Teams = append(record.Teams, teamRecord)

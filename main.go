@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"html/template"
 	"net/http"
 	"sync"
@@ -22,6 +23,10 @@ const (
 
 	ORG_LOGIN    = "smf"
 	ORG_PASSWORD = "tragedieobecnipastviny" // TODO: load from config file?
+)
+
+var (
+	listen = flag.String("listen", ":8080", "Listen address")
 )
 
 type Server struct {
@@ -99,8 +104,8 @@ func (s *Server) Start() {
 	}()
 
 	// 4. Listen on given port
-	log.Info("Server started")
-	http.ListenAndServe(":8080", router)
+	log.Infof("Server started on %s", *listen)
+	http.ListenAndServe(*listen, router)
 }
 
 func (s *Server) stopTimer() {
