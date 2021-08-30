@@ -1,9 +1,0 @@
-package: github.com/setnicka/smf-jezero
-import:
-- package: github.com/coreos/go-log
-  subpackages:
-  - log
-- package: github.com/gorilla/sessions
-  version: ^1.1.0
-- package: github.com/pkg/errors
-  version: ^0.8.0

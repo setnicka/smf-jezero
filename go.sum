@@ -1,0 +1,17 @@
+github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882 h1:6mh8oBDZlF1IpqYUzmf1ZPkZX6I5rHezFyw67UH/GNQ=
+github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882/go.mod h1:eKrozmno8olxWAjD/ZxdsQK6H/10qLIJOelUOrr1mug=
+github.com/coreos/go-systemd v0.0.0-20170731111925-d21964639418 h1:0QH6fTJVDpblGjjozilaO++YRbnQNnTYh3yuFJHH0o8=
+github.com/coreos/go-systemd v0.0.0-20170731111925-d21964639418/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=
+github.com/gorilla/context v1.1.1 h1:AWwleXJkX/nhcU9bZSnZoi3h/qGYqQAGhq6zZe/aQW8=
+github.com/gorilla/context v1.1.1/go.mod h1:kBGZzfjB9CEq2AlWe17Uuf7NDRt0dE0s8S51q0aT7Yg=
+github.com/gorilla/mux v1.6.3-0.20180605211556-cb4698366aa6 h1:FZz509NK00JSAcJkuCEaHnLCjK1AfTU3cdgEzaOJyGU=
+github.com/gorilla/mux v1.6.3-0.20180605211556-cb4698366aa6/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/gorilla/securecookie v1.1.1/go.mod h1:ra0sb63/xPlUeL+yeDciTfxMRAA+MP+HVt/4epWDjd4=
+github.com/gorilla/securecookie v1.1.2-0.20180608144417-78f3d318a8bf h1:tgJ+TrHb8GE+aKrvU3dWpVEByJtj9/i7QRMVtX1XMmc=
+github.com/gorilla/securecookie v1.1.2-0.20180608144417-78f3d318a8bf/go.mod h1:ra0sb63/xPlUeL+yeDciTfxMRAA+MP+HVt/4epWDjd4=
+github.com/gorilla/sessions v1.1.1 h1:YMDmfaK68mUixINzY/XjscuJ47uXFWSSHzFbBQM0PrE=
+github.com/gorilla/sessions v1.1.1/go.mod h1:8KCfur6+4Mqcc6S0FEfKuN15Vl5MgXW92AE8ovaJD0w=
+github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 h1:PJPDf8OUfOK1bb/NeTKd4f1QXZItOX389VN3B6qC8ro=
+github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1/go.mod h1:1NbS8ALrpOvjt0rHPNLyCIeMtbizbir8U//inJ+zuB8=
+github.com/pkg/errors v0.8.0 h1:WdK/asTD0HN+q6hsWO3/vpuAkAr+tw6aNJNDFFf0+qw=
+github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
