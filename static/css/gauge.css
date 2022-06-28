@@ -1,0 +1,80 @@
+/* Gauge
+ * source: https://codepen.io/tamer_aka_remat/pen/QYzJNG
+ */
+
+.gauge {
+	font-family: Arial, Helvetica, sans-serif;
+	background: #e7e7e7;
+	box-shadow: 0 -5px 0 3px rgba(255, 255, 255, 0.09), 0 0 35px 5px rgba(255, 255, 255, 0.29);
+	width: 200px;
+	height: 100px;
+	border-radius: 100px 100px 0 0;
+	position: relative;
+	overflow: hidden;
+	/* safari fix */
+	-webkit-transform-style: flat;
+	-webkit-transform: translateZ(0px);
+}
+
+.gauge-center {
+	content: attr(data-before);
+	color: #fff;
+	width: 60%;
+	height: 60%;
+	background: #15222E;
+	border-radius: 100px 100px 0 0;
+	position: absolute;
+	box-shadow: 0 -13px 15px -10px rgba(0, 0, 0, 0.28);
+	right: 21%;
+	bottom: 0;
+}
+.gauge-center .counter {
+	color: #fff;
+	font-size: 1.5em;
+	width: 100%;
+	padding: 20px 0 0 0;
+	text-align: center;
+	float: left;
+	-webkit-font-smoothing: antialiased;
+}
+
+.needle {
+	width: 78px;
+	height: 7px;
+	background: #15222E;
+	border-bottom-left-radius: 100%;
+	border-bottom-right-radius: 5px;
+	border-top-left-radius: 100%;
+	border-top-right-radius: 5px;
+	position: absolute;
+	bottom: 4px;
+	left: 20px;
+	transform-origin: 100% 4px;
+	box-shadow: 0 2px 2px 1px rgba(0, 0, 0, 0.38);
+	transition: transform 0.8s;
+	transition-timing-function: cubic-bezier(0.65, 1.95, 0.03, 0.32);
+}
+
+.slice-colors .st {
+	position: absolute;
+	bottom: 0;
+	width: 200px;
+	height: 200px;
+}
+.slice-colors .st.slice-item:nth-child(1) {
+	background-color: #1eaa59;
+	left: -100px;
+	transform-origin: bottom right;
+	transform: rotate(-33deg);
+}
+.slice-colors .st.slice-item:nth-child(2) {
+	background-color: #f1c40f;
+	left: 54px;
+	transform: rotate(-33deg);
+}
+.slice-colors .st.slice-item:nth-child(3) {
+	background-color: #E84C3D;
+	transform: rotate(33deg);
+	transform-origin: bottom left;
+	left: 100px;
+}

@@ -1,0 +1,82 @@
+{{ define "viewIndex" }}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/gauge.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/coral_reef.css">
+	<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+	<script src="/static/js/global.js"></script>
+</head>
+<body>
+
+<style>
+#reefA img {
+	filter: saturate(25%) hue-rotate(-90deg) brightness(75%);
+}
+#reefA .bubble {
+	border-color: green;
+}
+</style>
+
+<div class="info">
+	<div id="round">Kolo 17</div>
+	<div id="time">01:15</div>
+</div>
+<div class="window">
+	<div class="name">A</div>
+	<div class="reef" id="reefA">
+		<img class="back" src="/static/images/coral_reef_back_half.png">
+		<img class="middle" src="/static/images/coral_reef_middle_half.png">
+			<div style="left: 35%;" class = "bubble medium"></div>
+			<div style="left: 60%;" class = "bubble little"></div>
+			<div style="left: 80%;" class = "bubble medium" style="animation-delay: 3s;"></div>
+			<div style="left: 20%;" class = "bubble little" style="animation-delay: 3s;"></div>
+
+			<div class="fish right large" style="top: 40%;"><img src="/static/images/fish_dead.png"></div>
+			<div class="fish" style="top: 75%;"><img src="/static/images/fish_dead.png"></div>
+		<img class="front" src="/static/images/coral_reef_front_half.png">
+	</div>
+	<div class="gauge">
+		<div class="slice-colors">
+			<div class="st slice-item"></div>
+			<div class="st slice-item"></div>
+			<div class="st slice-item"></div>
+		</div>
+		<div id="needleA" class="needle" style="transform: rotate(90deg);"></div>
+		<div class="gauge-center"><div class="counter" id="counterA">100</div></div>
+	</div>
+</div>
+<div class="pipe">
+	<span id="globalMessage">Proteklo 14 znečištění ve směru z A do B</span>
+</div>
+<div class="window">
+	<div class="name">B</div>
+	<div class="reef" id="reefB">
+		<img class="back" src="/static/images/coral_reef_back_half.png">
+		<img class="middle" src="/static/images/coral_reef_middle_half.png">
+			<div style="left: 20%;" class = "bubble medium"></div>
+			<div style="left: 90%;" class = "bubble little"></div>
+			<div style="left: 75%;" class = "bubble medium" style="animation-delay: 3s;"></div>
+			<div style="left: 29%;" class = "bubble little" style="animation-delay: 3s;"></div>
+
+			<div class="fish right large" style="top: 40%;"><img src="/static/images/fish1.png"></div>
+			<div class="fish" style="top: 60%;"><img src="/static/images/fish2.png"></div>
+		<img class="front" src="/static/images/coral_reef_front_half.png">
+	</div>
+	<div class="gauge">
+		<div class="slice-colors">
+			<div class="st slice-item"></div>
+			<div class="st slice-item"></div>
+			<div class="st slice-item"></div>
+		</div>
+		<div id="needleB" class="needle" style="transform: rotate(90deg);"></div>
+		<div class="gauge-center"><div class="counter" id="counterB">100</div></div>
+	</div>
+</div>
+
+</body>
+</html>
+{{ end }}

@@ -1,0 +1,158 @@
+body {
+	background-color: black;
+	background-image: url('/static/images/bg_metal_tile.jpg');
+}
+
+.info, .window .name {
+	background-color: rgba(255, 255, 255, 0.29);
+	box-shadow: 0 0 35px 15px rgba(255, 255, 255, 0.29);
+	color: #333;
+}
+
+.info {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 700px;
+	margin: 20px auto -20px;
+	padding: 0px 50px 0px;
+	border-top-left-radius: 100px;
+	border-top-right-radius: 100px;
+}
+.info #round { font-size: 50px; }
+.info #time { font-size: 100px; }
+
+.window {
+	margin: 0px;
+	display: flex;
+	gap: 0px;
+	align-items: center;
+	justify-content: center;
+}
+
+.window .name {
+	color: #333;
+	padding: 20px 30px;
+	font-size: 200px;
+
+	border-top-left-radius: 100px;
+	border-bottom-left-radius: 100px;
+}
+
+.reef {
+	display: block;
+	position: relative;
+	height: 400px;
+	width: 930px;
+	overflow: hidden;
+	border: 10px solid #333333;
+	box-shadow: 0 0 10px 5px #333333;
+	border-radius: 50px;
+}
+.reef > img {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	height: 100%;
+}
+
+.bubble {
+	position: absolute;
+	border: 1px solid #fff;
+	box-shadow: 0 0 2px 0 rgb(244, 244, 244);
+	border-radius: 50%;
+}
+.bubble.medium {
+	width: 20px;
+	height: 20px;
+	animation: animateBubble 23s linear infinite, sideWays 2s ease-in-out infinite alternate;
+}
+.bubble.little{
+	width: 10px;
+	height: 10px;
+	animation: animateBubble 13s linear infinite, sideWays 2s ease-in-out infinite alternate;
+}
+
+@keyframes animateBubble {
+	0% { margin-top: 450px; }
+	100% { margin-top: -200px; }
+}
+
+@keyframes sideWays {
+	0% { margin-left:0px; }
+	100% { margin-left:50px; }
+}
+
+.fish {
+	position: absolute;
+	width: 100%;
+}
+.fish.right { transform: scaleX(-1); }
+
+.fish img {
+	animation: swim 15s linear forwards, bounce 3s;
+	animation-iteration-count: 1, infinite;
+	transform-origin: 50% 50%;
+	width: 60px;
+}
+.fish.large img { width: 80px; }
+
+@keyframes swim {
+	0% {margin-left: -235px}
+	100% {margin-left: 100%;}
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(2deg);
+  }
+  25% {
+    transform: translateY(5px) rotate(0);
+  }
+  50% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(0);
+  }
+}
+
+/* 90deg hack */
+.gauge-wrapper {
+	width: 100px;
+}
+.gauge {
+  transform: rotate(90deg);
+  margin-left: -50px;
+}
+.gauge-center .counter {
+  transform: rotate(-90deg);
+  padding-top: 0px;
+  padding-right: 35px;
+}
+
+.reef .gauge {
+	top: 50%;
+	left: 100%;
+}
+
+.pipe {
+	width: 600px;
+	height: 80px;
+	margin: 0px auto;
+	border-left: 60px solid #222;
+	border-right: 60px solid #222;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.pipe span {
+	color: #333;
+	font-size: 20px;
+	background-color: rgba(255, 255, 255, 0.49);
+	box-shadow: 0 0 35px 15px rgba(255, 255, 255, 0.49);
+	border-radius: 30px;
+	font-weight: bold;
+	padding: 10px 20px;
+}

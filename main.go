@@ -86,6 +86,9 @@ func (s *Server) Start() {
 	router.HandleFunc("/", auth(s, teamIndexHandler))
 	router.HandleFunc("/getHash", auth(s, teamHashHandler))
 
+	// Dashboard
+	router.HandleFunc("/view", viewIndexHandler)
+
 	// 2. Load templates
 	if _, err := s.getTemplates(); err != nil {
 		log.Errorf("Cannot load templates: %v", err)
