@@ -52,7 +52,7 @@ func (s *State) InitGame() {
 	log.Debugf("Init state of the game - adding initial round and resetting current actions")
 
 	// 1. Prepare init round
-	initRound := &roundState{
+	initRound := &RoundState{
 		Number: 0,
 		GlobalState: map[GamePart]int{
 			PartA: DEFAULT_GLOBAL_STATE,
@@ -72,14 +72,14 @@ func (s *State) InitGame() {
 			Money: DEFAULT_MONEY,
 		}
 	}
-	s.Rounds = []*roundState{initRound}
+	s.Rounds = []*RoundState{initRound}
 
 	// 3. Save
 	s.Save()
 }
 
 // GetLastState returns last round of the game.
-func (s *State) GetLastState() *roundState {
+func (s *State) GetLastState() *RoundState {
 	if len(s.Rounds) > 0 {
 		return s.Rounds[len(s.Rounds)-1]
 	} else {
@@ -127,11 +127,11 @@ func (s *State) SendState() error {
 	return nil
 }
 
-func (s *State) calculateRound(previousRound *roundState, actions map[string]int) *roundState {
+func (s *State) calculateRound(previousRound *RoundState, actions map[string]int) *RoundState {
 	roundNumber := previousRound.Number + 1
 
 	// 1. Prepare new round struct
-	newRound := &roundState{
+	newRound := &RoundState{
 		Number:      roundNumber,
 		GlobalState: previousRound.GlobalState.copy(),
 		Teams:       map[string]teamState{},
@@ -294,7 +294,7 @@ func (a ActionDef) Check(globalState int, money int) bool {
 	}
 }
 
-func (round *roundState) getMoney(login string) int {
+func (round *RoundState) getMoney(login string) int {
 	if team, found := round.Teams[login]; found {
 		return team.Money
 	}

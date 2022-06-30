@@ -70,10 +70,10 @@ func (s *State) DeleteTeam(login string) error {
 	for i, team := range s.Teams {
 		if team.Login == login {
 			s.Teams = append(s.Teams[:i], s.Teams[i+1:]...)
+			s.Save()
 			return nil
 		}
 	}
-	s.Save()
 	return fmt.Errorf("Cannot find team with login '%s'", login)
 }
 

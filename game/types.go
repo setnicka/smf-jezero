@@ -18,7 +18,7 @@ var GameParts = []GamePart{PartA, PartB}
 
 type State struct {
 	Teams          []Team
-	Rounds         []*roundState // Round i = state after i-th round (round 0 = start state)
+	Rounds         []*RoundState // Round i = state after i-th round (round 0 = start state)
 	CurrentActions map[string]int
 }
 
@@ -53,7 +53,7 @@ type Team struct {
 	Password string
 }
 
-type roundState struct {
+type RoundState struct {
 	Number        int
 	GlobalState   GlobalState
 	GlobalMessage template.HTML
@@ -61,7 +61,7 @@ type roundState struct {
 	Time          time.Time
 }
 
-func (rs roundState) RoundNumber() int {
+func (rs RoundState) RoundNumber() int {
 	return rs.Number + 1
 }
 

@@ -63,6 +63,7 @@ func main() {
 
 func (s *Server) Start() {
 	log.Info("Starting server...")
+	flag.Parse()
 
 	// 1. Construct router
 	router := mux.NewRouter()
@@ -108,7 +109,10 @@ func (s *Server) Start() {
 
 	// 4. Listen on given port
 	log.Infof("Server started on %s", *listen)
-	http.ListenAndServe(*listen, router)
+	err := http.ListenAndServe(*listen, router)
+	if err != nil {
+		log.Errorf("ERROR: %v", err)
+	}
 }
 
 func (s *Server) stopTimer() {
