@@ -173,7 +173,7 @@ func (s *State) calculateRound(previousRound *roundState, actions map[string]int
 
 	// 3. Compare parts
 	d := math.Abs(float64(newRound.GlobalState[PartA] - newRound.GlobalState[PartB]))
-	change := int(math.Round(d*d/600 + d/20))
+	change := int(math.Round(math.Sqrt(d*d/150 + d/5)))
 	if change > 0 && newRound.GlobalState[PartA] > newRound.GlobalState[PartB] {
 		newRound.GlobalState[PartA] -= change
 		newRound.GlobalState[PartB] += change
