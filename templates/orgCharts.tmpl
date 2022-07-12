@@ -3,7 +3,7 @@
 
 <script src="/static/js/charts.js" type="text/javascript" charset="utf-8"></script>
 
-<h2>Vývoj jezer</h2>
+<h2>Vývoj moří</h2>
 <div style="width:100%; margin: 0px auto;">
 	<canvas id="graph-status"></canvas>
 </div>
@@ -68,7 +68,7 @@
 					display: true,
 					scaleLabel: {
 						display: true,
-						labelString: '🍉'
+						labelString: '🥒'
 					}
 				}]
 			}
@@ -80,14 +80,14 @@
 			labels: [{{range .History}}'{{.RoundNumber}}',{{end}}].reverse(),
 			datasets: [
 			{
-				label: 'JEZERO A',
+				label: 'MOŘE A',
 				backgroundColor: window.chartColors.blue,
 				borderColor: window.chartColors.blue,
 				data: [{{range $.History}}{{.FinalState.GetA}},{{end}}].reverse(),
 				fill: false,
 			},
 			{
-				label: 'JEZERO B',
+				label: 'MOŘE B',
 				backgroundColor: window.chartColors.red,
 				borderColor: window.chartColors.red,
 				data: [{{range $.History}}{{.FinalState.GetB}},{{end}}].reverse(),
@@ -122,7 +122,7 @@
 					display: true,
 					scaleLabel: {
 						display: true,
-						labelString: '🍉'
+						labelString: 'Stav'
 					}
 				}]
 			}

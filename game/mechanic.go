@@ -177,11 +177,11 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 	if change > 0 && newRound.GlobalState[PartA] > newRound.GlobalState[PartB] {
 		newRound.GlobalState[PartA] -= change
 		newRound.GlobalState[PartB] += change
-		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z jezera B do jezera A se přelilo %d znečištění.", change))
+		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z moře B do moře A se přelilo %d znečištění.", change))
 	} else if change > 0 {
 		newRound.GlobalState[PartA] += change
 		newRound.GlobalState[PartB] -= change
-		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z jezera A do jezera B se přelilo %d znečištění.", change))
+		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z moře A do moře B se přelilo %d znečištění.", change))
 	}
 
 	return newRound
@@ -197,8 +197,8 @@ func GetActions() map[int]ActionDef {
 
 var actionsNames = map[int]string{
 	ACTION_NOTHING:  "Nic",
-	ACTION_ECO:      "Vypouštění přečištěné vody",
-	ACTION_HARVEST:  "Vypouštění přímo z kanálu",
+	ACTION_ECO:      "Tradiční pěstování okurek",
+	ACTION_HARVEST:  "Průmyslové pěstování okurek",
 	ACTION_CLEANING: "Čištění",
 	ACTION_CONTROL:  "Kontrola",
 	ACTION_SPIONAGE: "Špionáž",
@@ -214,7 +214,7 @@ var actionsDef = map[int]ActionDef{
 		DisplayName:  actionsNames[ACTION_ECO],
 		DisplayClass: "",
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return -ECO_POLLUTION, globalState, fmt.Sprintf("Vypustili jste do jezera přečištěnou odpadní vodu, získáváte %d 🍉 a zhoršili jste stav jezera o %d", globalState, ECO_POLLUTION)
+			return -ECO_POLLUTION, globalState, fmt.Sprintf("Věnovali jste se tradičnímu pěstování, získáváte %d 🥒 a zhoršili jste stav moře o %d", globalState, ECO_POLLUTION)
 		},
 	},
 
@@ -225,10 +225,10 @@ var actionsDef = map[int]ActionDef{
 		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
 			// If there were control -> penalty
 			if inActions(ACTION_CONTROL, actions) {
-				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše vypouštění přímo z kanálu bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d 🍉", HARVEST_PENALTY)
+				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše průmyslové pěstování bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d 🥒", HARVEST_PENALTY)
 			} else {
 				gatheredMoney := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Vypustili jste odpadní vodu přímo z kanálu, získali jste za to %d 🍉 a zhoršili stav jezera o %d", gatheredMoney, HARVEST_POLLUTION)
+				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Věnovali jste se průmyslovému pěstování, získali jste za to %d 🥒 a zhoršili stav moře o %d", gatheredMoney, HARVEST_POLLUTION)
 			}
 		},
 	},
@@ -241,7 +241,7 @@ var actionsDef = map[int]ActionDef{
 			if globalState > 0 {
 				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
 			}
-			return cleaning, 0, fmt.Sprintf("Zlepšili jste čištěním stav jezera o %d", cleaning)
+			return cleaning, 0, fmt.Sprintf("Zlepšili jste čištěním stav moře o %d", cleaning)
 		},
 	},
 
