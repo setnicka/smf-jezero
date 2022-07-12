@@ -20,13 +20,18 @@ function getJSON(url, callback) {
 	xhr.send();
 };
 
+var timer = null;
+
 // source: https://stackoverflow.com/a/20618517
 function startTimer(duration, display, callback=null) {
+	if (timer != null) {
+		clearInterval(timer);
+	}
+
 	var start = Date.now(),
 	    diff,
 	    minutes,
 	    seconds;
-	var timer;
 	function tick() {
 		// get the number of seconds that have elapsed since
 		// startTimer() was called
