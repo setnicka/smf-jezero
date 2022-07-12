@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882
 	github.com/coreos/go-systemd v0.0.0-20170731111925-d21964639418 // indirect
+	github.com/go-chi/render v1.0.1
 	github.com/gorilla/mux v1.6.3-0.20180605211556-cb4698366aa6
 	github.com/gorilla/securecookie v1.1.2-0.20180608144417-78f3d318a8bf // indirect
 	github.com/gorilla/sessions v1.1.1

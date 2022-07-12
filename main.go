@@ -89,6 +89,8 @@ func (s *Server) Start() {
 
 	// Dashboard
 	router.HandleFunc("/view", viewIndexHandler)
+	router.HandleFunc("/view/status", viewStatusHandler)
+	router.HandleFunc("/view/getHash", viewHashHandler)
 
 	// 2. Load templates
 	if _, err := s.getTemplates(); err != nil {

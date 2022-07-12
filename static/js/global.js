@@ -5,6 +5,21 @@ function httpGet(theUrl) {
 	return xmlHttp.responseText;
 }
 
+function getJSON(url, callback) {
+	var xhr = new XMLHttpRequest();
+	xhr.open('GET', url, true);
+	xhr.responseType = 'json';
+	xhr.onload = function() {
+		var status = xhr.status;
+		if (status === 200) {
+			callback(null, xhr.response);
+		} else {
+			callback(status, xhr.response);
+		}
+	};
+	xhr.send();
+};
+
 // source: https://stackoverflow.com/a/20618517
 function startTimer(duration, display, callback=null) {
 	var start = Date.now(),
@@ -16,6 +31,11 @@ function startTimer(duration, display, callback=null) {
 		// get the number of seconds that have elapsed since
 		// startTimer() was called
 		diff = duration - (((Date.now() - start) / 1000) | 0);
+
+
+		if (diff < 0) {
+			diff = 0;
+		}
 
 		// does the same job as parseInt truncates the float
 		minutes = (diff / 60) | 0;
