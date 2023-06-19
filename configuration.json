@@ -1,0 +1,16 @@
+{
+	"server": {
+		"org_login": "smf",
+		"org_password": "tragedieobecnipastviny",
+
+		"static_dir": "static",
+		"template_dir": "templates",
+
+		"session_secret": "bojovyVlkodlakCeskePosty",
+		"session_max_age": 86400,
+		"listen": ":8081"
+	},
+	"game": {
+
+	}
+}

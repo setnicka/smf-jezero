@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -13,34 +13,34 @@ import (
 	"github.com/setnicka/smf-jezero/game"
 )
 
-func orgLoginHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse login form"})
+			s.setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse login form"})
 		}
 		login := r.PostFormValue("login")
 		password := r.PostFormValue("password")
-		if login == ORG_LOGIN && password == ORG_PASSWORD {
-			session, _ := server.sessionStore.Get(r, SESSION_COOKIE_NAME)
+		if login == s.cfg.OrgLogin && password == s.cfg.OrgPassword {
+			session, _ := s.sessionStore.Get(r, sessionCookieName)
 			session.Values["authenticated"] = true
 			session.Values["org"] = true
 			session.Save(r, w)
 			http.Redirect(w, r, "dashboard", http.StatusSeeOther)
 			return
 		}
-		setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
+		s.setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
 		http.Redirect(w, r, "login", http.StatusSeeOther)
 		return
 	}
 
-	data := getGeneralData("Orgovský login", w, r) // Nothing special to add
-	executeTemplate(w, "orgLogin", data)
+	data := s.getGeneralData("Orgovský login", w, r) // Nothing special to add
+	s.executeTemplate(w, "orgLogin", data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func orgHashHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(calcOrgHash()))
+func (s *Server) orgHashHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(s.calcOrgHash()))
 }
 
 type orgTeamsData struct {
@@ -48,21 +48,21 @@ type orgTeamsData struct {
 	Teams []game.Team
 }
 
-func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse teams form"})
+			s.setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse teams form"})
 		}
 
 		if r.PostFormValue("deleteTeam") != "" {
-			if team := server.state.GetTeam(r.PostFormValue("deleteTeam")); team != nil {
-				server.state.DeleteTeam(r.PostFormValue("deleteTeam"))
-				setFlashMessage(w, r, FlashMessage{"success", "Team deleted"})
+			if team := s.state.GetTeam(r.PostFormValue("deleteTeam")); team != nil {
+				s.state.DeleteTeam(r.PostFormValue("deleteTeam"))
+				s.setFlashMessage(w, r, FlashMessage{"success", "Team deleted"})
 			}
 		} else if r.PostFormValue("setPassword") != "" {
-			if team := server.state.GetTeam(r.PostFormValue("login")); team != nil {
-				server.state.TeamSetPassword(r.PostFormValue("login"), r.PostFormValue("setPassword"))
-				setFlashMessage(w, r, FlashMessage{"success", "Password set"})
+			if team := s.state.GetTeam(r.PostFormValue("login")); team != nil {
+				s.state.TeamSetPassword(r.PostFormValue("login"), r.PostFormValue("setPassword"))
+				s.setFlashMessage(w, r, FlashMessage{"success", "Password set"})
 			}
 		} else if r.PostFormValue("newTeamLogin") != "" {
 			var part game.GamePart
@@ -72,32 +72,32 @@ func orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 			case string(game.PartB):
 				part = game.PartB
 			default:
-				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Part '%s' is not valid game part", r.PostFormValue("newTeamPart"))})
+				s.setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Part '%s' is not valid game part", r.PostFormValue("newTeamPart"))})
 				http.Redirect(w, r, "teams", http.StatusSeeOther)
 				return
 			}
 
-			err := server.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"), part)
+			err := s.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"), part)
 			if err == nil {
-				setFlashMessage(w, r, FlashMessage{"success", "Team added"})
+				s.setFlashMessage(w, r, FlashMessage{"success", "Team added"})
 			} else {
 
-				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Cannot add team due to error: %v", err)})
+				s.setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Cannot add team due to error: %v", err)})
 			}
 		}
 		http.Redirect(w, r, "teams", http.StatusSeeOther)
 		return
 	}
 
-	teams := server.state.GetTeams()
+	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
 			return teams[i].Name < teams[j].Name
 		}
 		return teams[i].Part < teams[j].Part
 	})
-	executeTemplate(w, "orgTeams", orgTeamsData{
-		GeneralData: getGeneralData("Týmy", w, r),
+	s.executeTemplate(w, "orgTeams", orgTeamsData{
+		GeneralData: s.getGeneralData("Týmy", w, r),
 		Teams:       teams,
 	})
 }
@@ -138,11 +138,11 @@ type orgDashboardTeamRecord struct {
 }
 
 // Construct history records for teams in given order
-func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
+func (s *Server) getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
 	history := []orgDashboardRoundRecord{}
 
-	for i := len(server.state.Rounds) - 1; i >= 0; i-- {
-		currentRound := server.state.Rounds[i]
+	for i := len(s.state.Rounds) - 1; i >= 0; i-- {
+		currentRound := s.state.Rounds[i]
 
 		record := orgDashboardRoundRecord{
 			RoundNumber: currentRound.Number,
@@ -153,7 +153,7 @@ func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
 
 		lastRound := currentRound
 		if i > 0 {
-			lastRound = server.state.Rounds[i-1]
+			lastRound = s.state.Rounds[i-1]
 			record.StartState = lastRound.GlobalState
 		}
 
@@ -182,35 +182,35 @@ func getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord {
 	return history
 }
 
-func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
+			s.setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
 		}
 
 		if r.PostFormValue("calculateRound") != "" {
-			server.mutex.Lock()
-			server.stopTimer()
-			server.state.EndRound()
-			server.mutex.Unlock()
+			s.mutex.Lock()
+			s.stopTimer()
+			s.state.EndRound()
+			s.mutex.Unlock()
 
-			setFlashMessage(w, r, FlashMessage{"success", "Kolo spočítáno, výsledky níže"})
+			s.setFlashMessage(w, r, FlashMessage{"success", "Kolo spočítáno, výsledky níže"})
 		}
 
 		if r.PostFormValue("resetGame") != "" {
-			server.mutex.Lock()
-			server.stopTimer()
-			server.state.InitGame()
-			server.mutex.Unlock()
+			s.mutex.Lock()
+			s.stopTimer()
+			s.state.InitGame()
+			s.mutex.Unlock()
 
-			setFlashMessage(w, r, FlashMessage{"success", "Hra resetována"})
+			s.setFlashMessage(w, r, FlashMessage{"success", "Hra resetována"})
 		}
 
 		if r.PostFormValue("sendState") != "" {
-			if err := server.state.SendState(); err == nil {
-				setFlashMessage(w, r, FlashMessage{"info", "Stav poslán"})
+			if err := s.state.SendState(); err == nil {
+				s.setFlashMessage(w, r, FlashMessage{"info", "Stav poslán"})
 			} else {
-				setFlashMessage(w, r, FlashMessage{"warning", fmt.Sprintf("Chyba při posílání stavu: %v", err)})
+				s.setFlashMessage(w, r, FlashMessage{"warning", fmt.Sprintf("Chyba při posílání stavu: %v", err)})
 			}
 		}
 
@@ -223,26 +223,26 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			server.mutex.Lock()
-			server.countdownDuration = time.Duration(seconds) * time.Second
-			server.resetTimer()
-			server.mutex.Unlock()
+			s.mutex.Lock()
+			s.countdownDuration = time.Duration(seconds) * time.Second
+			s.resetTimer()
+			s.mutex.Unlock()
 
-			setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Odpočet spuštěn, další kolo za %v", server.countdownDuration)})
+			s.setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Odpočet spuštěn, další kolo za %v", s.countdownDuration)})
 		}
 		if r.PostFormValue("submit-time-stop") != "" {
-			server.mutex.Lock()
-			server.stopTimer()
-			server.mutex.Unlock()
+			s.mutex.Lock()
+			s.stopTimer()
+			s.mutex.Unlock()
 
-			setFlashMessage(w, r, FlashMessage{"success", "Odpočet zastaven"})
+			s.setFlashMessage(w, r, FlashMessage{"success", "Odpočet zastaven"})
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
 		return
 	}
 
-	teams := server.state.GetTeams()
+	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
 			return teams[i].Name < teams[j].Name
@@ -251,24 +251,24 @@ func orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	data := orgDashboardData{
-		GeneralData: getGeneralData("Stav hry", w, r),
-		Hash:        calcOrgHash(),
+		GeneralData: s.getGeneralData("Stav hry", w, r),
+		Hash:        s.calcOrgHash(),
 		Teams:       teams,
 
 		AllActions:     game.GetActions(),
-		RoundNumber:    server.state.GetRoundNumber(),
-		CurrentState:   server.state.GetLastState().GlobalState,
+		RoundNumber:    s.state.GetRoundNumber(),
+		CurrentState:   s.state.GetLastState().GlobalState,
 		CurrentActions: []currentAction{},
-		History:        getHistoryRecords(teams),
+		History:        s.getHistoryRecords(teams),
 	}
 	for _, team := range teams {
 		data.CurrentActions = append(data.CurrentActions, currentAction{
-			Action: server.state.CurrentActions[team.Login],
+			Action: s.state.CurrentActions[team.Login],
 			Team:   team,
 		})
 	}
 
-	executeTemplate(w, "orgDashboard", data)
+	s.executeTemplate(w, "orgDashboard", data)
 }
 
 ///////
@@ -279,8 +279,8 @@ type orgChartsData struct {
 	History []orgDashboardRoundRecord
 }
 
-func orgChartsHandler(w http.ResponseWriter, r *http.Request) {
-	teams := server.state.GetTeams()
+func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
+	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
 			return teams[i].Name < teams[j].Name
@@ -288,9 +288,9 @@ func orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 		return teams[i].Part < teams[j].Part
 	})
 
-	executeTemplate(w, "orgCharts", orgChartsData{
-		GeneralData: getGeneralData("Grafy", w, r),
+	s.executeTemplate(w, "orgCharts", orgChartsData{
+		GeneralData: s.getGeneralData("Grafy", w, r),
 		Teams:       teams,
-		History:     getHistoryRecords(teams),
+		History:     s.getHistoryRecords(teams),
 	})
 }

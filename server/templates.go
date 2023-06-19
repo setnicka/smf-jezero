@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -13,9 +13,9 @@ import (
 )
 
 // Execute template given by its name and with given data with all the error handling.
-func executeTemplate(w http.ResponseWriter, templateName string, data interface{}) {
+func (s *Server) executeTemplate(w http.ResponseWriter, templateName string, data interface{}) {
 	log.Debugf("Executing template '%s'", templateName)
-	template, err := server.getTemplates()
+	template, err := s.getTemplates()
 	if err != nil || template == nil {
 		log.Errorf("Error getting templates: %v ", err)
 		fmt.Fprintf(w, "Error getting templates: %v", err)
@@ -31,7 +31,7 @@ func executeTemplate(w http.ResponseWriter, templateName string, data interface{
 // Scan directory with templates and if there is some changed file reload all templates,
 // then return these loaded templates.
 func (s *Server) getTemplates() (*template.Template, error) {
-	globPath := path.Join(TEMPLATE_DIR, "*.tmpl")
+	globPath := path.Join(s.cfg.TemplateDir, "*.tmpl")
 	templateFiles, err := filepath.Glob(globPath)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (s *Server) getTemplates() (*template.Template, error) {
 	return s.templates, nil
 }
 
-// Hashes are not computed on every request - hashes are remebered and they are
+// Hashes are not computed on every request - hashes are remembered and they are
 // recomputed only when mod time of file changes
 type fileHashInfo struct {
 	modTime time.Time

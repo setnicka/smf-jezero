@@ -1,4 +1,10 @@
-package main
+package server
+
+// Cookies
+const (
+	sessionCookieName = "jezero-session"
+	flashSessionName  = "jezero-flash"
+)
 
 // GeneralData for rendering page
 type GeneralData struct {

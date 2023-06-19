@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -9,8 +9,8 @@ import (
 	"github.com/setnicka/smf-jezero/game"
 )
 
-func getRoundHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "%d", server.state.GetRoundNumber())
+func (s *Server) getRoundHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "%d", s.state.GetRoundNumber())
 }
 
 type teamHistoryRecord struct {
@@ -41,14 +41,14 @@ type teamIndexData struct {
 	Actions map[int]game.ActionDef
 }
 
-func teamHashHandler(w http.ResponseWriter, r *http.Request) {
-	team := server.state.GetTeam(getUser(r))
-	w.Write([]byte(calcTeamHash(team)))
+func (s *Server) teamHashHandler(w http.ResponseWriter, r *http.Request) {
+	team := s.state.GetTeam(s.getUser(r))
+	w.Write([]byte(s.calcTeamHash(team)))
 }
 
-func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
-	team := server.state.GetTeam(getUser(r))
-	currentState := server.state.GetLastState()
+func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
+	team := s.state.GetTeam(s.getUser(r))
+	currentState := s.state.GetLastState()
 	var money int
 	if currentStateTeam, found := currentState.Teams[team.Login]; found {
 		money = currentStateTeam.Money
@@ -56,7 +56,7 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
-			setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
+			s.setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
 		}
 
 		if r.PostFormValue("setAction") != "" {
@@ -64,14 +64,14 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 			if action, found := game.GetActions()[actionNumber]; found {
 				// Check if action could be performed
 				if action.Check(currentState.GlobalState[team.Part], money) {
-					server.state.CurrentActions[team.Login] = actionNumber
-					server.state.Save()
-					setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Akce '%s' nastavena", action.DisplayName)})
+					s.state.CurrentActions[team.Login] = actionNumber
+					s.state.Save()
+					s.setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Akce '%s' nastavena", action.DisplayName)})
 				} else {
-					setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce '%s' nemůže být nastavena, nejsou splněny podmínky", action.DisplayName)})
+					s.setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce '%s' nemůže být nastavena, nejsou splněny podmínky", action.DisplayName)})
 				}
 			} else {
-				setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce s indexem '%d' neexistuje", actionNumber)})
+				s.setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Akce s indexem '%d' neexistuje", actionNumber)})
 			}
 
 		}
@@ -80,8 +80,8 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := teamIndexData{
-		GeneralData:   getGeneralData("Hra", w, r),
-		Hash:          calcTeamHash(team),
+		GeneralData:   s.getGeneralData("Hra", w, r),
+		Hash:          s.calcTeamHash(team),
 		Team:          team,
 		RoundNumber:   currentState.RoundNumber(),
 		GlobalState:   currentState.GlobalState,
@@ -92,12 +92,12 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		data.Money = currentStateTeam.Money
 		data.GameMessage = currentStateTeam.Message
 	}
-	data.SelectedAction, _ = server.state.CurrentActions[team.Login]
+	data.SelectedAction, _ = s.state.CurrentActions[team.Login]
 
 	// Construct history records
-	for i := len(server.state.Rounds) - 1; i >= 1; i-- {
-		currentRound := server.state.Rounds[i]
-		lastRound := server.state.Rounds[i-1]
+	for i := len(s.state.Rounds) - 1; i >= 1; i-- {
+		currentRound := s.state.Rounds[i]
+		lastRound := s.state.Rounds[i-1]
 
 		record := teamHistoryRecord{
 			RoundNumber:   currentRound.Number,
@@ -118,5 +118,5 @@ func teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		data.History = append(data.History, record)
 	}
 
-	executeTemplate(w, "teamIndex", data)
+	s.executeTemplate(w, "teamIndex", data)
 }
