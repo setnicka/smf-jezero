@@ -23,6 +23,7 @@ type Server struct {
 	state             *game.State
 	variant           game.Variant
 	countdownDuration time.Duration
+	nextCountdown     time.Duration
 	countdownTo       time.Time
 	countdownTimer    *time.Timer
 	mutex             sync.RWMutex
@@ -122,6 +123,7 @@ func (s *Server) Start() {
 			s.mutex.Lock()
 			log.Infof("Next round by timer")
 			s.state.EndRound()
+			s.countdownDuration = s.nextCountdown
 			s.resetTimer()
 			s.mutex.Unlock()
 		}
@@ -141,10 +143,10 @@ func (s *Server) stopTimer() {
 }
 
 func (s *Server) resetTimer() {
+	s.stopTimer()
 	if s.countdownDuration == 0 {
 		return
 	}
-	s.stopTimer()
 	s.countdownTo = time.Now().Add(s.countdownDuration)
 	s.countdownTimer.Reset(s.countdownDuration)
 }

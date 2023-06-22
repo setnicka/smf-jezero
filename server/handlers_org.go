@@ -118,6 +118,7 @@ type orgDashboardData struct {
 	CurrentActions []currentAction
 	History        []orgDashboardRoundRecord
 	AllActions     map[int]game.ActionDef
+	NextCountdown  int
 }
 
 type orgDashboardRoundRecord struct {
@@ -225,6 +226,7 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			s.mutex.Lock()
 			s.countdownDuration = time.Duration(seconds) * time.Second
+			s.nextCountdown = s.countdownDuration
 			s.resetTimer()
 			s.mutex.Unlock()
 
@@ -236,6 +238,21 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 			s.mutex.Unlock()
 
 			s.setFlashMessage(w, r, FlashMessage{"success", "Odpočet zastaven"})
+		}
+		if r.PostFormValue("submit-next-countdown") != "" && r.PostFormValue("countdown") != "" {
+			seconds, err := strconv.Atoi(r.PostFormValue("countdown"))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			} else if seconds < 0 {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			s.mutex.Lock()
+			s.nextCountdown = time.Duration(seconds) * time.Second
+			s.mutex.Unlock()
+
+			s.setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Odpočet příštího kola nastaven na %v", s.nextCountdown)})
 		}
 
 		http.Redirect(w, r, "dashboard", http.StatusSeeOther)
@@ -260,6 +277,7 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		CurrentState:   s.state.GetLastState().GlobalState,
 		CurrentActions: []currentAction{},
 		History:        s.getHistoryRecords(teams),
+		NextCountdown:  int(s.nextCountdown.Seconds()),
 	}
 	for _, team := range teams {
 		data.CurrentActions = append(data.CurrentActions, currentAction{

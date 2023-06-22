@@ -46,25 +46,27 @@
 			<input type="submit" class="btn btn-warning" name="submit-time-stop" value="Zastavit">
 		</div>
 	</form>
-	<div>
-	<form method="post">
+	<form method="post" class="btn-group">
+		<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (20s)">
 		<input type="hidden" name="countdown" value="20">
-			<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (20s)">
-		</div>
+
 	</form>
-	<form method="post">
+	<form method="post" class="btn-group" style="margin-left: -5px; margin-right: -5px;">
 		<input type="hidden" name="countdown" value="60">
-		<div class="btn-group">
-			<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (60s)">
-		</div>
+		<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (60s)">
+		<i></i>
+
 	</form>
-	<form method="post">
+	<form method="post" class="btn-group">
 		<input type="hidden" name="countdown" value="120">
+		<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (2m)">
+	</form>
+	<form method="post" style="margin-top: 4px;">
+		Odpočet pro příští kolo<small>(0 = pauza)</small>: <input type="number" name="countdown" value="{{.NextCountdown}}" min="0" size="6">
 		<div class="btn-group">
-			<input type="submit" class="btn btn-warning" name="submit-time-start" value="Spustit (2m)">
+			<input type="submit" class="btn btn-info" name="submit-next-countdown" value="Nastavit">
 		</div>
 	</form>
-	</div>
 </div>
 
 <h2>Historie kol</h2>
