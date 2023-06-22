@@ -19,9 +19,17 @@ type ServerConfig struct {
 	Listen string `json:"listen"`
 }
 
+// GameConfig holds configuration for the Game logic
+type GameConfig struct {
+	StateFile string   `json:"state_file"`
+	BackupDir string   `json:"backup_dir"`
+	TCPNotify []string `json:"tcp_notify"`
+}
+
 // Config holds all the configuration
 type Config struct {
 	Server ServerConfig `json:"server"`
+	Game   GameConfig   `json:"game"`
 }
 
 // Load configuration from given file

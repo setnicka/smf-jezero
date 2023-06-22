@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"strings"
 	"time"
+
+	"github.com/setnicka/smf-jezero/config"
 )
 
 type GamePart string
@@ -17,6 +19,8 @@ const (
 var GameParts = []GamePart{PartA, PartB}
 
 type State struct {
+	cfg     config.GameConfig
+
 	Teams          []Team
 	Rounds         []*RoundState // Round i = state after i-th round (round 0 = start state)
 	CurrentActions map[string]int

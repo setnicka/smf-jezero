@@ -11,6 +11,9 @@
 		"listen": ":8081"
 	},
 	"game": {
+		"state_file": "state.json",
+		"backup_dir": "saves",
 
+		"tcp_notify": ["192.168.1.117:4242", "192.168.1.103:4242"]
 	}
 }

@@ -21,7 +21,7 @@ func main() {
 		log.Fatalf("Config error: %v", err)
 	}
 
-	game := game.Init()
+	game := game.Init(cfg.Game)
 	server := server.New(cfg.Server, game)
 
 	server.Start()

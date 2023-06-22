@@ -14,8 +14,6 @@ import (
 
 // Game mechanic
 
-var tcp_visualizators = []string{"192.168.1.117:4242", "192.168.1.103:4242"}
-
 const (
 	// Game constants
 	DEFAULT_GLOBAL_STATE = 100
@@ -114,8 +112,8 @@ func (s *State) EndRound() error {
 
 // SendState sends the state to the visualizator.
 func (s *State) SendState() error {
-	for _, tcpVisualizator := range tcp_visualizators {
-		if conn, err := net.DialTimeout("tcp", tcpVisualizator, time.Second); err == nil {
+	for _, notifyTarget := range s.cfg.TCPNotify {
+		if conn, err := net.DialTimeout("tcp", notifyTarget, time.Second); err == nil {
 			defer conn.Close()
 			gs := s.GetLastState().GlobalState
 			fmt.Fprintf(conn, "%d;%d\n", gs[PartA], gs[PartB])

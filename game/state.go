@@ -10,25 +10,23 @@ import (
 	"time"
 
 	"github.com/coreos/go-log/log"
+	"github.com/setnicka/smf-jezero/config"
 )
 
-const (
-	SAVE_DIR       = "saves"
-	STATE_FILENAME = "state.json"
-)
-
-func Init() *State {
+// Init the Game
+func Init(cfg config.GameConfig) *State {
 	log.Debug("Initializing game state")
 	state := &State{
-		Teams: []Team{},
+		cfg:     cfg,
+		Teams:   []Team{},
 	}
 
 	// Try to load previously saved state
-	jsonFile, err := os.Open(STATE_FILENAME)
+	jsonFile, err := os.Open(cfg.StateFile)
 	if err == nil {
 		defer jsonFile.Close()
 
-		log.Debugf("Loading state from file '%s'", STATE_FILENAME)
+		log.Debugf("Loading state from file '%s'", cfg.StateFile)
 		jsonBytes, _ := ioutil.ReadAll(jsonFile)
 		if err = json.Unmarshal(jsonBytes, &state); err != nil {
 			log.Errorf("Problem during loading state from file: %v", err)
@@ -101,10 +99,10 @@ func (s *State) TeamCheckPassword(login string, password string) bool {
 func (s *State) Save() {
 	log.Debug("Saving actual state into file")
 	// 1. If exists current state move it into folder
-	if _, err := os.Stat(STATE_FILENAME); err == nil {
+	if _, err := os.Stat(s.cfg.StateFile); err == nil {
 		// Ensure dir exists
-		os.MkdirAll(SAVE_DIR, os.ModePerm)
-		os.Rename(STATE_FILENAME, path.Join(SAVE_DIR, fmt.Sprintf("%s%s", STATE_FILENAME, time.Now().Format(".150405.00")))) // 2006-01-02_150405
+		os.MkdirAll(s.cfg.BackupDir, os.ModePerm)
+		os.Rename(s.cfg.StateFile, path.Join(s.cfg.BackupDir, fmt.Sprintf("%s%s", s.cfg.StateFile, time.Now().Format(".150405.00")))) // 2006-01-02_150405
 	}
 
 	// 2. Marshal state into json
@@ -114,7 +112,7 @@ func (s *State) Save() {
 		return
 	}
 
-	if err := ioutil.WriteFile(STATE_FILENAME, bytes, 0644); err != nil {
-		log.Errorf("Cannot save json of actual state into file '%s': %v", STATE_FILENAME, err)
+	if err := ioutil.WriteFile(s.cfg.StateFile, bytes, 0644); err != nil {
+		log.Errorf("Cannot save json of actual state into file '%s': %v", s.cfg.StateFile, err)
 	}
 }
