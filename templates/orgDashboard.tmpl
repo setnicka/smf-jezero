@@ -1,6 +1,8 @@
 {{ define "orgDashboard" }}
 {{ template "part_org_header" . }}
 
+{{ $stateSymbol := .Variant.TemplateStateSymbol }}
+
 <script type="text/javascript">
 	function checkHash() {
 		var round = httpGet("getHash");
@@ -11,7 +13,7 @@
 	setInterval(checkHash, 1000);
 </script>
 
-<h1 class="text-center"><small>Stav jezera</small> {{.CurrentState}}</h1>
+<h1 class="text-center"><small>{{.Variant.TemplateStateName}}</small> {{.CurrentState.Pretty $stateSymbol}}</h1>
 <h2 class="text-center"><small>Kolo</small> {{.RoundNumber}}
 {{- if .CountdownActive -}}
 	<small>, další kolo za</small> <span id="countdown">{{ .CountdownSeconds }}</span></h2>
@@ -69,13 +71,13 @@
 
 <table class="table table-bordered" id="history">
 <thead>
-	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{mult 2 (len .Teams)}}">Peníze a akce</th></tr>
+	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{mult 2 (len .Teams)}}">{{.Variant.TemplateMoneyName}} a akce</th></tr>
 	<tr>{{ $prevPart := "" }}{{range .Teams}}
 		<th {{ if ne $prevPart .Part}}style="border-left: 2px solid #444444;"{{ $prevPart = .Part }}{{end}} colspan="2">{{.Name}} ({{.Part}})</th>
 	{{end}}</tr>
 </thead>
 <tbody>
-	<tr class="info"><th>NOW</th><td>{{.CurrentState}}</td>
+	<tr class="info"><th>NOW</th><td>{{.CurrentState.Pretty $stateSymbol}}</td>
 		{{ $prevPart := "" }}
 		{{ range .CurrentActions }}
 			<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}></td>
@@ -86,7 +88,7 @@
 		{{ $n := .RoundNumber }}
 		<tr><th>{{$n}}</th>
 			<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}
-				{{if gt $n 0}}<span class="hint">{{.StartState}} ⇛ </span>{{end}}{{.FinalState}}
+				{{if gt $n 0}}<span class="hint">{{.StartState.Pretty $stateSymbol}} ⇛ </span>{{end}}{{.FinalState.Pretty $stateSymbol}}
 			</span></td>
 			{{ $prevPart := "" }}
 			{{range .Teams}}

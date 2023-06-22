@@ -38,7 +38,7 @@ func (s *Server) viewHashHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) viewIndexHandler(w http.ResponseWriter, r *http.Request) {
-	s.executeTemplate(w, "viewIndex", s.getViewStatusData(w, r))
+	s.executeTemplate(w, s.variant.ViewTemplateName(), s.getViewStatusData(w, r))
 }
 
 func (s *Server) viewStatusHandler(w http.ResponseWriter, r *http.Request) {

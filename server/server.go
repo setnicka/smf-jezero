@@ -21,6 +21,7 @@ type Server struct {
 	sessionStore      sessions.Store
 	templates         *template.Template
 	state             *game.State
+	variant           game.Variant
 	countdownDuration time.Duration
 	countdownTo       time.Time
 	countdownTimer    *time.Timer
@@ -28,7 +29,7 @@ type Server struct {
 }
 
 // New creates new server
-func New(cfg config.ServerConfig, game *game.State) *Server {
+func New(cfg config.ServerConfig, game *game.State, variant game.Variant) *Server {
 	cookieStore := sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	cookieStore.MaxAge(cfg.SessionMaxAge)
 	//cookieStore.Options.Domain = ".fuf.me"
@@ -37,6 +38,7 @@ func New(cfg config.ServerConfig, game *game.State) *Server {
 		cfg:            cfg,
 		sessionStore:   cookieStore,
 		state:          game,
+		variant:        variant,
 		countdownTimer: time.NewTimer(time.Hour),
 	}
 	s.countdownTimer.Stop() // by default stop the timer, but we need to initialize it

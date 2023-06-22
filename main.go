@@ -6,6 +6,7 @@ import (
 
 	"github.com/setnicka/smf-jezero/config"
 	"github.com/setnicka/smf-jezero/game"
+	"github.com/setnicka/smf-jezero/game/variants"
 	"github.com/setnicka/smf-jezero/server"
 )
 
@@ -21,8 +22,13 @@ func main() {
 		log.Fatalf("Config error: %v", err)
 	}
 
-	game := game.Init(cfg.Game)
-	server := server.New(cfg.Server, game)
+	variant := variants.Get(cfg.Variant)
+	if variant == nil {
+		log.Fatalf("Variant '%s' does not exist", cfg.Variant)
+	}
+
+	game := game.Init(cfg.Game, variant)
+	server := server.New(cfg.Server, game, variant)
 
 	server.Start()
 }

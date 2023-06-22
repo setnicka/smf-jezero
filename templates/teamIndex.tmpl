@@ -28,9 +28,11 @@ setInterval(checkHash, 1000);
 <div class="col-md-4" style="border: 0px;">
 
 {{ $ourState := index .GlobalState .Team.Part }}
+{{ $moneySymbol := .Variant.TemplateMoneySymbol }}
+{{ $stateSymbol := .Variant.TemplateStateSymbol }}
 
 <div id="teamName">Tým <b>{{.Team.Name}}</b> v části <b>{{.Team.Part}}</b></div>
-<h1><small>Stav moře</small> {{.GlobalState}}</h1>
+<h1><small>{{.Variant.TemplateStateName}}</small> {{.GlobalState.Pretty $stateSymbol}}</h1>
 <h3><small>Kolo</small> {{.RoundNumber -}}
 {{- if .CountdownActive -}}
 	<small>, další kolo za</small> <span id="countdown">{{ .CountdownSeconds }}</span></h3>
@@ -46,9 +48,9 @@ setInterval(checkHash, 1000);
 {{ end }}
 
 <div class="input-group">
-  <span class="input-group-addon"><b>Peníze:</b></span>
+  <span class="input-group-addon"><b>{{.Variant.TemplateMoneyName}}:</b></span>
   <input type="text" class="form-control" value="{{.Money}}" disabled style="font-weight: bold; text-align: right;">
-  <span class="input-group-addon">🥒</span>
+  {{if $moneySymbol}}<span class="input-group-addon">{{$moneySymbol}}</span>{{end}}
 </div>
 
 {{if .GameMessage}}<div id="gameMessage"><b>Výsledek minulé akce:</b> {{.GameMessage}}</div>{{end}}
@@ -80,15 +82,15 @@ setInterval(checkHash, 1000);
 <table class="table table-bordered table-striped" id="history">
 <thead>
 	<tr><th rowspan='2'>Kolo</th><th colspan='2'>Počáteční</th><th rowspan='2'>Akce</th><th colspan='2'>Finální</th></tr>
-	<tr><th>Stav</th><th>Peníze</th><th>Stav</th><th>Peníze</th></tr>
+	<tr><th>Stav</th><th>{{.Variant.TemplateMoneyName}}</th><th>Stav</th><th>{{.Variant.TemplateMoneyName}}</th></tr>
 </thead>
 <tbody>
 {{range .History}}
 	<tr>
 		<th rowspan="2">{{.RoundNumber}}</th>
-		<td>{{.StartState}}</td><td>{{.StartMoney}}</td>
+		<td>{{.StartState.Pretty $stateSymbol}}</td><td>{{.StartMoney}}{{$moneySymbol}}</td>
 		<th>{{(index $allActions .Action).DisplayName}}</th>
-		<td>{{.FinalState}}</td><td>{{.FinalMoney}}</td>
+		<td>{{.FinalState.Pretty $stateSymbol}}</td><td>{{.FinalMoney}}{{$moneySymbol}}</td>
 	</tr>
 	<tr><td colspan="5">{{.Message}}{{if and .Message .GlobalMessage}}<br>{{end}}{{.GlobalMessage}}</td></tr>
 {{end}}

@@ -14,10 +14,11 @@ import (
 )
 
 // Init the Game
-func Init(cfg config.GameConfig) *State {
+func Init(cfg config.GameConfig, variant Variant) *State {
 	log.Debug("Initializing game state")
 	state := &State{
 		cfg:     cfg,
+		variant: variant,
 		Teams:   []Team{},
 	}
 

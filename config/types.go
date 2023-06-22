@@ -28,8 +28,9 @@ type GameConfig struct {
 
 // Config holds all the configuration
 type Config struct {
-	Server ServerConfig `json:"server"`
-	Game   GameConfig   `json:"game"`
+	Server  ServerConfig `json:"server"`
+	Game    GameConfig   `json:"game"`
+	Variant string       `json:"variant"`
 }
 
 // Load configuration from given file

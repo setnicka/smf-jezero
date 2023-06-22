@@ -255,7 +255,7 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		Hash:        s.calcOrgHash(),
 		Teams:       teams,
 
-		AllActions:     game.GetActions(),
+		AllActions:     s.state.GetActions(),
 		RoundNumber:    s.state.GetRoundNumber(),
 		CurrentState:   s.state.GetLastState().GlobalState,
 		CurrentActions: []currentAction{},

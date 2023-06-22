@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"math"
 	"net"
-	"strings"
 	"time"
 
 	"github.com/coreos/go-log/log"
@@ -150,7 +149,7 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 	for _, team := range s.Teams {
 		// 2.1 Get previous state of money and current action of each team
 		previousMoney := previousRound.getMoney(team.Login)
-		actionID, actionDef := getAction(actions, team.Login)
+		actionID, actionDef := s.getAction(actions, team.Login)
 
 		// 2.2 Execute action func
 		var globalDiff, teamMoneyDiff int
@@ -175,11 +174,11 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 	if change > 0 && newRound.GlobalState[PartA] > newRound.GlobalState[PartB] {
 		newRound.GlobalState[PartA] -= change
 		newRound.GlobalState[PartB] += change
-		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z moře B do moře A se přelilo %d znečištění.", change))
+		newRound.GlobalMessage = template.HTML(s.variant.GlobalMessage("A", "B", change))
 	} else if change > 0 {
 		newRound.GlobalState[PartA] += change
 		newRound.GlobalState[PartB] -= change
-		newRound.GlobalMessage = template.HTML(fmt.Sprintf("<b>Znečištění přes úžinu:</b> Z moře A do moře B se přelilo %d znečištění.", change))
+		newRound.GlobalMessage = template.HTML(s.variant.GlobalMessage("B", "A", change))
 	}
 
 	return newRound
@@ -189,87 +188,84 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 // ACTIONS /////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 
-func GetActions() map[int]ActionDef {
-	return actionsDef
-}
+// GetActions returns map of all possible actions for this Game
+func (s *State) GetActions() map[int]ActionDef {
+	if s.actions != nil {
+		return s.actions
+	}
 
-var actionsNames = map[int]string{
-	ACTION_NOTHING:  "Nic",
-	ACTION_ECO:      "Tradiční pěstování okurek",
-	ACTION_HARVEST:  "Průmyslové pěstování okurek",
-	ACTION_CLEANING: "Čištění",
-	ACTION_CONTROL:  "Kontrola",
-	ACTION_SPIONAGE: "Špionáž",
-}
-
-var actionsDef = map[int]ActionDef{
-	ACTION_NOTHING: {
-		DisplayName:  actionsNames[ACTION_NOTHING],
-		DisplayClass: "",
-	},
-
-	ACTION_ECO: {
-		DisplayName:  actionsNames[ACTION_ECO],
-		DisplayClass: "",
-		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return -ECO_POLLUTION, globalState, fmt.Sprintf("Věnovali jste se tradičnímu pěstování, získáváte %d 🥒 a zhoršili jste stav moře o %d", globalState, ECO_POLLUTION)
+	s.actions = map[int]ActionDef{
+		ACTION_NOTHING: {
+			DisplayName:  s.variant.NopName(),
+			DisplayClass: "",
 		},
-	},
 
-	ACTION_HARVEST: {
-		DisplayName:  actionsNames[ACTION_HARVEST],
-		DisplayClass: "",
-		check:        func(globalState int, money int) bool { return (money >= 0) },
-		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			// If there were control -> penalty
-			if inActions(ACTION_CONTROL, actions) {
-				return -HARVEST_POLLUTION, -HARVEST_PENALTY, fmt.Sprintf("Vaše průmyslové pěstování bylo odhaleno kontrolou! Nic jste nezískali a musíte místo toho zaplatit pokutu %d 🥒", HARVEST_PENALTY)
-			} else {
+		ACTION_ECO: {
+			DisplayName:  s.variant.EcoName(),
+			DisplayClass: "",
+			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+				return -ECO_POLLUTION, globalState, s.variant.EcoMessage(globalState, ECO_POLLUTION)
+			},
+		},
+
+		ACTION_HARVEST: {
+			DisplayName:  s.variant.HarvestName(),
+			DisplayClass: "",
+			check:        func(globalState int, money int) bool { return (money >= 0) },
+			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+				// If there were inspection -> penalty
+				if inActions(ACTION_CONTROL, actions) {
+					return -HARVEST_POLLUTION, -HARVEST_PENALTY, s.variant.HarvestPenaltyMessage(HARVEST_PENALTY)
+				}
+
 				gatheredMoney := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gatheredMoney, fmt.Sprintf("Věnovali jste se průmyslovému pěstování, získali jste za to %d 🥒 a zhoršili stav moře o %d", gatheredMoney, HARVEST_POLLUTION)
-			}
+				return -HARVEST_POLLUTION, gatheredMoney, s.variant.HarvestSuccessMessage(gatheredMoney, HARVEST_POLLUTION)
+			},
 		},
-	},
 
-	ACTION_CLEANING: {
-		DisplayName:  actionsNames[ACTION_CLEANING],
-		DisplayClass: "",
-		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			cleaning := CLEANING_ABSOLUTE
-			if globalState > 0 {
-				cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
-			}
-			return cleaning, 0, fmt.Sprintf("Zlepšili jste čištěním stav moře o %d", cleaning)
+		ACTION_CLEANING: {
+			DisplayName:  s.variant.CleaningName(),
+			DisplayClass: "",
+			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+				cleaning := CLEANING_ABSOLUTE
+				if globalState > 0 {
+					cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
+				}
+
+				return cleaning, 0, s.variant.CleaningMessage(cleaning)
+			},
 		},
-	},
 
-	ACTION_CONTROL: {
-		DisplayName:  actionsNames[ACTION_CONTROL],
-		DisplayClass: "",
-		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			return 0, 0, fmt.Sprintf("Požádali jste o kontrolu, pokud někdo v minulém kole prováděl něco špatného, tak byl potrestán")
+		ACTION_CONTROL: {
+			DisplayName:  s.variant.InspectionName(),
+			DisplayClass: "",
+			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+				return 0, 0, s.variant.InspectionMessage()
+			},
 		},
-	},
 
-	ACTION_SPIONAGE: {
-		DisplayName:  actionsNames[ACTION_SPIONAGE],
-		DisplayClass: "",
-		check:        func(globalState int, money int) bool { return (money >= 0) },
-		action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
-			// If there were control -> no spionage
-			if inActions(ACTION_CONTROL, actions) {
-				return 0, -SPIONAGE_COST, fmt.Sprintf("Špionáž nemohla být dokončena kvůli probíhající kontrole jiného týmu, nic jste nezjistili")
-			} else {
-				results := []string{}
+		ACTION_SPIONAGE: {
+			DisplayName:  s.variant.EspionageName(),
+			DisplayClass: "",
+			check:        func(globalState int, money int) bool { return (money >= 0) },
+			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+				// If there were control -> no spionage
+				if inActions(ACTION_CONTROL, actions) {
+					return 0, -SPIONAGE_COST, s.variant.EspionageFailMessage()
+				}
+
+				teamActions := map[string]string{}
 				for team, action := range actions {
 					if s.GetTeam(team) != nil {
-						results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", s.GetTeam(team).Name, actionsNames[action]))
+						teamActions[s.GetTeam(team).Name] = s.actions[action].DisplayName
 					}
 				}
-				return 0, -SPIONAGE_COST, fmt.Sprintf("Špionáž úspěšná, zjištěno:<ul>\n%s\n</ul>", strings.Join(results, "\n"))
-			}
+				return 0, -SPIONAGE_COST, s.variant.EspionageSuccessMessage(teamActions)
+			},
 		},
-	},
+	}
+
+	return s.actions
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -300,14 +296,14 @@ func (round *RoundState) getMoney(login string) int {
 	return DEFAULT_MONEY
 }
 
-func getAction(actions map[string]int, login string) (int, ActionDef) {
+func (s *State) getAction(actions map[string]int, login string) (int, ActionDef) {
 	if actionID, found := actions[login]; found {
-		if action, found := actionsDef[actionID]; found {
+		if action, found := s.actions[actionID]; found {
 			return actionID, action
 		}
-		log.Infof("Team %s - There is no action with ID '%d', fallbacking to the default action '%s'.", login, actionID, actionsDef[DEFAULT_ACTION].DisplayName)
-		return DEFAULT_ACTION, actionsDef[DEFAULT_ACTION]
+		log.Infof("Team %s - There is no action with ID '%d', fallbacking to the default action '%s'.", login, actionID, s.actions[DEFAULT_ACTION].DisplayName)
+		return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
 	}
-	log.Infof("No action for team '%s', fallbacking to the default action '%s'.", login, actionsDef[DEFAULT_ACTION].DisplayName)
-	return DEFAULT_ACTION, actionsDef[DEFAULT_ACTION]
+	log.Infof("No action for team '%s', fallbacking to the default action '%s'.", login, s.actions[DEFAULT_ACTION].DisplayName)
+	return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
 }

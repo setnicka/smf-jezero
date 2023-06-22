@@ -16,6 +16,7 @@ func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Req
 		Title:            title,
 		CountdownActive:  !s.countdownTo.IsZero(),
 		CountdownSeconds: int(math.Ceil(s.countdownTo.Sub(time.Now()).Seconds())),
+		Variant:          s.variant,
 	}
 	if flashMessages := s.getFlashMessages(w, r); len(flashMessages) > 0 {
 		data.MessageType = flashMessages[0].Type
@@ -56,7 +57,7 @@ func (s *Server) calcGlobalHash() []string {
 
 	return []string{
 		strconv.Itoa(currentState.RoundNumber()),
-		currentState.GlobalState.String(),
+		currentState.GlobalState.Hash(),
 		strconv.FormatInt(s.countdownTo.Unix(), 10),
 	}
 }

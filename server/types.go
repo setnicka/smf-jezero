@@ -1,5 +1,7 @@
 package server
 
+import "github.com/setnicka/smf-jezero/game"
+
 // Cookies
 const (
 	sessionCookieName = "jezero-session"
@@ -14,6 +16,7 @@ type GeneralData struct {
 	Message          string
 	CountdownActive  bool
 	CountdownSeconds int
+	Variant          game.Variant
 }
 
 // FlashMessage holds type and content of flash message displayed to the user

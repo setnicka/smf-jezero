@@ -3,12 +3,12 @@
 
 <script src="/static/js/charts.js" type="text/javascript" charset="utf-8"></script>
 
-<h2>Vývoj moří</h2>
+<h2>{{.Variant.TemplateStateName}} v čase</h2>
 <div style="width:100%; margin: 0px auto;">
 	<canvas id="graph-status"></canvas>
 </div>
 
-<h2>Vývoj peněz týmů</h2>
+<h2>{{.Variant.TemplateMoneyName}} týmů v čase</h2>
 <div style="width:100%; margin: 0px auto;">
 	<canvas id="graph-teams"></canvas>
 </div>
@@ -68,7 +68,7 @@
 					display: true,
 					scaleLabel: {
 						display: true,
-						labelString: '🥒'
+						labelString: '{{.Variant.TemplateMoneySymbol}}'
 					}
 				}]
 			}

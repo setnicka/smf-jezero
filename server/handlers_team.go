@@ -61,7 +61,7 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 
 		if r.PostFormValue("setAction") != "" {
 			actionNumber, _ := strconv.Atoi(r.PostFormValue("setAction"))
-			if action, found := game.GetActions()[actionNumber]; found {
+			if action, found := s.state.GetActions()[actionNumber]; found {
 				// Check if action could be performed
 				if action.Check(currentState.GlobalState[team.Part], money) {
 					s.state.CurrentActions[team.Login] = actionNumber
@@ -86,7 +86,7 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		RoundNumber:   currentState.RoundNumber(),
 		GlobalState:   currentState.GlobalState,
 		GlobalMessage: currentState.GlobalMessage,
-		Actions:       game.GetActions(),
+		Actions:       s.state.GetActions(),
 	}
 	if currentStateTeam, found := currentState.Teams[team.Login]; found {
 		data.Money = currentStateTeam.Money

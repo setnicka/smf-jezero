@@ -20,6 +20,8 @@ var GameParts = []GamePart{PartA, PartB}
 
 type State struct {
 	cfg     config.GameConfig
+	variant Variant
+	actions map[int]ActionDef
 
 	Teams          []Team
 	Rounds         []*RoundState // Round i = state after i-th round (round 0 = start state)
@@ -27,13 +29,22 @@ type State struct {
 }
 
 // GlobalState is number (or numbers) representing state of the jezero
-//type GlobalState int
+// type GlobalState int
 type GlobalState map[GamePart]int
 
-func (g GlobalState) String() string {
+// Hash for automatic checking
+func (g GlobalState) Hash() string {
 	parts := []string{}
 	for _, part := range GameParts {
-		parts = append(parts, fmt.Sprintf("%s:%d", part, g[part]))
+		parts = append(parts, fmt.Sprintf("%s%d", part, g[part]))
+	}
+	return strings.Join(parts, "-")
+}
+
+func (g GlobalState) Pretty(symbol string) string {
+	parts := []string{}
+	for _, part := range GameParts {
+		parts = append(parts, fmt.Sprintf("%s:%d%s", part, g[part], symbol))
 	}
 	return strings.Join(parts, ", ")
 }
@@ -85,4 +96,36 @@ type ActionDef struct {
 	DisplayClass string
 	check        checkFunc
 	action       actionFunc
+}
+
+//////////
+
+// Variant is interface for game variants (translations)
+type Variant interface {
+	ViewTemplateName() string
+	TemplateStateName() string
+	TemplateStateSymbol() string
+	TemplateMoneyName() string
+	TemplateMoneySymbol() string
+
+	NopName() string
+
+	EcoName() string
+	EcoMessage(money int, pollution int) string
+
+	HarvestName() string
+	HarvestPenaltyMessage(penalty int) string
+	HarvestSuccessMessage(money int, pollution int) string
+
+	CleaningName() string
+	CleaningMessage(cleaning int) string
+
+	InspectionName() string
+	InspectionMessage() string
+
+	EspionageName() string
+	EspionageFailMessage() string
+	EspionageSuccessMessage(teamActions map[string]string) string
+
+	GlobalMessage(reduce string, increase string, change int) string
 }
