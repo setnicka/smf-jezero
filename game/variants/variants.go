@@ -7,6 +7,8 @@ func Get(name string) game.Variant {
 	switch name {
 	case "coral-reef":
 		return NewCoralReef()
+	case "hotel":
+		return NewHotel()
 	}
 	return nil
 }

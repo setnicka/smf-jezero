@@ -1,0 +1,118 @@
+{{ define "viewHotel" }}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/thermometer.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/hotel.css">
+	<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+	<script src="/static/js/jquery-3.6.0.min.js"></script>
+	<script src="/static/js/global.js"></script>
+	<script src="/static/js/view-hotel.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+	var hash = "{{ .Hash }}";
+</script>
+
+<div class="view">
+<div class="side left">
+
+	<div class="box-canvas">
+		<div class="shower-pole">
+		  <div class="water" id="waterA"></div>
+		</div>
+		<div class="bath-feet"></div>
+		<div class="bath"></div>
+	</div>
+
+	<div class="thermometer left">
+		<div class="temperature" id="temperatureA" style="height:0" data-value="0°C"></div>
+		<div class="ticks"></div>
+	</div>
+	<div class="thermometer-pipes"></div>
+	<div class="bojler-wrapper">
+		<div class="bojler" id="bojlerA">
+			<div class="name">A</div>
+			<div style="left: 35%; animation-delay: 2s;" class = "bubble medium"></div>
+			<div style="left: 60%;" class = "bubble little"></div>
+			<div style="left: 70%; animation-delay: 1s;" class = "bubble medium"></div>
+			<div style="left: 20%; animation-delay: 3s;" class = "bubble little"></div>
+		</div>
+		<div class="fire" id="fireA">
+			<div class="fire-left">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-center">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-right">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-bottom">
+			<div class="main-fire"></div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="middle">
+	<div class="box" id="countdown">01:15</div>
+	<div class="box" id="round">Kolo 17</div>
+
+	<div class="pipe-gauge" id="middle-gauge">?</div>
+	<div class="pipe-join"></div>
+	<div class="pipe"></div>
+</div>
+<div class="side">
+	<div class="bojler-wrapper">
+		<div class="bojler" id="bojlerB">
+			<div class="name">B</div>
+			<div style="left: 35%;" class = "bubble medium"></div>
+			<div style="left: 60%; animation-delay: 2s;" class = "bubble little"></div>
+			<div style="left: 70%; animation-delay: 3s;" class = "bubble medium"></div>
+			<div style="left: 20%; animation-delay: 1s;" class = "bubble little"></div>
+		</div>
+		<div class="fire" id="fireB">
+			<div class="fire-left">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-center">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-right">
+			<div class="main-fire"></div>
+			<div class="particle-fire"></div>
+			</div>
+			<div class="fire-bottom">
+			<div class="main-fire"></div>
+			</div>
+		</div>
+	</div>
+	<div class="thermometer-pipes"></div>
+	<div class="thermometer">
+		<div class="temperature" id="temperatureB" style="height:0" data-value="0°C"></div>
+		<div class="ticks"></div>
+	</div>
+
+	<div class="box-canvas">
+		<div class="shower-pole">
+		  <div class="water" id="waterB"></div>
+		</div>
+		<div class="bath-feet"></div>
+		<div class="bath"></div>
+	</div>
+
+</div>
+</div>
+
+</body>
+</html>
+{{ end }}
