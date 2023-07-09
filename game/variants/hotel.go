@@ -16,7 +16,7 @@ func NewHotel() *Hotel { return &Hotel{} }
 
 func (h *Hotel) ViewTemplateName() string    { return "viewHotel" }
 func (h *Hotel) TemplateStateName() string   { return "Bojlery" }
-func (h *Hotel) TemplateStateSymbol() string { return "°F" }
+func (h *Hotel) TemplateStateSymbol() string { return "°H" }
 func (h *Hotel) TemplateMoneyName() string   { return "Spokojenost" }
 func (h *Hotel) TemplateMoneySymbol() string { return "" }
 
@@ -30,16 +30,16 @@ func (h *Hotel) EspionageName() string  { return "Nastražit kameru do sprch" }
 ////////////////////////////////////////////////////////////////////////////////
 
 func (h *Hotel) EcoMessage(money int, pollution int) string {
-	return fmt.Sprintf("Umyli jste se rychle a úsporně ve vlažné vodě. Vaše spokojenost se zvýšila o %d a váš bojler tím zchladl o %d°F.", money, pollution)
+	return fmt.Sprintf("Umyli jste se rychle a úsporně ve vlažné vodě. Vaše spokojenost se zvýšila o %d a váš bojler tím zchladl o %d°H.", money, pollution)
 }
 func (h *Hotel) HarvestPenaltyMessage(penalty int) string {
 	return fmt.Sprintf("Vaše horká lázeň byla odhalena uklízečkou! Vaše spokojenost klesla o %d.", penalty)
 }
 func (h *Hotel) HarvestSuccessMessage(money int, pollution int) string {
-	return fmt.Sprintf("Naložili jste se do horké lázně a spotřebovali jste spoustu teplé vody. Váš bojler tím vychladl o %d°F, ale vaše spokojenost vzrostla o %d.", pollution, money)
+	return fmt.Sprintf("Naložili jste se do horké lázně a spotřebovali jste spoustu teplé vody. Váš bojler tím vychladl o %d°H, ale vaše spokojenost vzrostla o %d.", pollution, money)
 }
 func (h *Hotel) CleaningMessage(cleaning int) string {
-	return fmt.Sprintf("Přiložili jste pod kotlem a tím ohřáli váš bojler o %d°F.", cleaning)
+	return fmt.Sprintf("Přiložili jste pod kotlem a tím ohřáli váš bojler o %d°H.", cleaning)
 }
 func (h *Hotel) InspectionMessage() string {
 	return "Požádali jste uklízečku u kontrolu všech sprch. Pokud někdo v minulém kole prováděl něco špatného, tak byl potrestán."
@@ -56,5 +56,5 @@ func (h *Hotel) EspionageSuccessMessage(teamActions map[string]string) string {
 }
 
 func (h *Hotel) GlobalMessage(reduce string, increase string, change int) string {
-	return fmt.Sprintf("<b>Sálání:</b> Sáláním se bojler %s ochladil o %d°F a bojler %s se naopak ohřál o %d°F.", reduce, change, increase, change)
+	return fmt.Sprintf("<b>Sálání:</b> Sáláním se bojler %s ochladil o %d°H a bojler %s se naopak ohřál o %d°H.", reduce, change, increase, change)
 }

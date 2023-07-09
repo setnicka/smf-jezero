@@ -79,7 +79,7 @@ function convertToHex (rgb) {
 const temperatureConfig = {
 	minTemp: -100,
 	maxTemp: 200,
-	unit: "°F",
+	unit: "°H",
 	colorStart: convertToRGB("#e44427"),
 	colorEnd: convertToRGB("#3dcadf"),
 };

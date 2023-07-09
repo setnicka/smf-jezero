@@ -1,7 +1,8 @@
 body {
 	background-color: black;
 	background-image: url('/static/images/bg_metal_tile.jpg');
-	padding-top: 140px;
+	padding-top: 100px;
+	overflow: hidden;
 }
 
 .view {
@@ -18,7 +19,7 @@ body {
 	justify-content: end;
 	align-items: center;
 
-	width: 300px;
+	width: 270px;
 }
 
 .middle .box {
@@ -120,11 +121,11 @@ body {
 
 .side .thermometer {
 	z-index: 20;
-	margin-right: 150px;
+	margin-right: 80px;
 }
 .side.left .thermometer {
 	margin-right: 0px;
-	margin-left: 150px;
+	margin-left: 80px;
 }
 
 .side .thermometer-pipes {
@@ -210,8 +211,8 @@ body {
 
 .shower-pole {
 	position: absolute;
-	left: 190px;
-	width: 230px;
+	left: 170px;
+	width: 210px;
 	height: 205px;
 	margin-top: -200px;
 	border: 15px solid var(--shower-color);
