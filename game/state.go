@@ -43,6 +43,10 @@ func Init(cfg config.GameConfig, variant Variant) *State {
 	return state
 }
 
+func (s *State) HasNotifyTargets() bool {
+	return len(s.cfg.TCPNotify) > 0
+}
+
 func (s *State) GetTeams() []Team {
 	return s.Teams
 }

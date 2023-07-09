@@ -53,7 +53,7 @@ func (s *Server) Start() {
 	flag.Parse()
 
 	// 1. Construct router
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
 
 	// Static resources
 	fs := NoListFileSystem{http.Dir(s.cfg.StaticDir)}

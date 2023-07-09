@@ -111,14 +111,15 @@ type currentAction struct {
 
 type orgDashboardData struct {
 	GeneralData
-	Hash           string
-	Teams          []game.Team
-	RoundNumber    int
-	CurrentState   game.GlobalState
-	CurrentActions []currentAction
-	History        []orgDashboardRoundRecord
-	AllActions     map[int]game.ActionDef
-	NextCountdown  int
+	Hash             string
+	Teams            []game.Team
+	RoundNumber      int
+	CurrentState     game.GlobalState
+	CurrentActions   []currentAction
+	History          []orgDashboardRoundRecord
+	AllActions       map[int]game.ActionDef
+	NextCountdown    int
+	HasNotifyTargets bool
 }
 
 type orgDashboardRoundRecord struct {
@@ -278,6 +279,8 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		CurrentActions: []currentAction{},
 		History:        s.getHistoryRecords(teams),
 		NextCountdown:  int(s.nextCountdown.Seconds()),
+
+		HasNotifyTargets: s.state.HasNotifyTargets(),
 	}
 	for _, team := range teams {
 		data.CurrentActions = append(data.CurrentActions, currentAction{
