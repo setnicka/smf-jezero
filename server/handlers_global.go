@@ -52,7 +52,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func (s *Server) calcGlobalHash() []string {
+func (s *Server) getGlobalHash() []string {
 	currentState := s.state.GetLastState()
 
 	return []string{
@@ -62,8 +62,12 @@ func (s *Server) calcGlobalHash() []string {
 	}
 }
 
+func (s *Server) calcGlobalHash() string {
+	return strings.Join(s.getGlobalHash(), "-")
+}
+
 func (s *Server) calcTeamHash(team *game.Team) string {
-	hash := s.calcGlobalHash()
+	hash := s.getGlobalHash()
 
 	actions := s.state.CurrentActions
 	if action, found := actions[team.Login]; found {
@@ -72,9 +76,8 @@ func (s *Server) calcTeamHash(team *game.Team) string {
 	return strings.Join(hash, "-")
 }
 
-func (s *Server) calcOrgHash() string {
-	hash := s.calcGlobalHash()
-
+func (s *Server) calcActionsHash() string {
+	hash := []string{}
 	actions := s.state.CurrentActions
 	for _, team := range s.state.Teams {
 		if action, found := actions[team.Login]; found {

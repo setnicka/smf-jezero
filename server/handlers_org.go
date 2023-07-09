@@ -40,7 +40,8 @@ func (s *Server) orgLoginHandler(w http.ResponseWriter, r *http.Request) {
 ////////////////////////////////////////////////////////////////////////////////
 
 func (s *Server) orgHashHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(s.calcOrgHash()))
+	text := s.calcGlobalHash() + "\n" + s.calcActionsHash()
+	w.Write([]byte(text))
 }
 
 type orgTeamsData struct {
@@ -111,7 +112,8 @@ type currentAction struct {
 
 type orgDashboardData struct {
 	GeneralData
-	Hash             string
+	GlobalHash       string
+	ActionsHash      string
 	Teams            []game.Team
 	RoundNumber      int
 	CurrentState     game.GlobalState
@@ -185,6 +187,14 @@ func (s *Server) getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord 
 }
 
 func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
+	s.orgDashboardGenericHandler("orgDashboard", w, r)
+}
+
+func (s *Server) orgDashboardTableHandler(w http.ResponseWriter, r *http.Request) {
+	s.orgDashboardGenericHandler("orgDashboardTable", w, r)
+}
+
+func (s *Server) orgDashboardGenericHandler(template string, w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		if err := r.ParseForm(); err != nil {
 			s.setFlashMessage(w, r, FlashMessage{"danger", "Cannot parse form"})
@@ -270,7 +280,8 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 
 	data := orgDashboardData{
 		GeneralData: s.getGeneralData("Stav hry", w, r),
-		Hash:        s.calcOrgHash(),
+		GlobalHash:  s.calcGlobalHash(),
+		ActionsHash: s.calcActionsHash(),
 		Teams:       teams,
 
 		AllActions:     s.state.GetActions(),
@@ -289,7 +300,7 @@ func (s *Server) orgDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	s.executeTemplate(w, "orgDashboard", data)
+	s.executeTemplate(w, template, data)
 }
 
 ///////

@@ -3,7 +3,6 @@ package server
 import (
 	"html/template"
 	"net/http"
-	"strings"
 
 	"github.com/go-chi/render"
 	"github.com/setnicka/smf-jezero/game"
@@ -17,16 +16,12 @@ type viewStatus struct {
 	GlobalMessage template.HTML
 }
 
-func (s *Server) getViewHash() string {
-	return strings.Join(s.calcGlobalHash(), "-")
-}
-
 func (s *Server) getViewStatusData(w http.ResponseWriter, r *http.Request) viewStatus {
 	currentState := s.state.GetLastState()
 
 	return viewStatus{
 		GeneralData:   s.getGeneralData("Přehled", w, r),
-		Hash:          s.getViewHash(),
+		Hash:          s.calcGlobalHash(),
 		RoundNumber:   currentState.RoundNumber(),
 		GlobalState:   currentState.GlobalState,
 		GlobalMessage: currentState.GlobalMessage,
@@ -34,7 +29,7 @@ func (s *Server) getViewStatusData(w http.ResponseWriter, r *http.Request) viewS
 }
 
 func (s *Server) viewHashHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(s.getViewHash()))
+	w.Write([]byte(s.calcGlobalHash()))
 }
 
 func (s *Server) viewIndexHandler(w http.ResponseWriter, r *http.Request) {

@@ -4,9 +4,16 @@
 {{ $stateSymbol := .Variant.TemplateStateSymbol }}
 
 <script type="text/javascript">
+	var globalHash = "{{.GlobalHash}}";
+	var actionsHash = "{{.ActionsHash}}";
 	function checkHash() {
-		var round = httpGet("getHash");
-		if (round != "{{.Hash}}") {
+		var hashes = httpGet("getHash").split("\n");
+		if (hashes[0] == globalHash && hashes[1] != actionsHash) {
+			// reload only the table
+			document.getElementById("table-wrapper").innerHTML = httpGet("dashboard/table");
+			actionsHash = hashes[1];
+		} else if (hashes[0] != globalHash) {
+			// reload whole page
 			window.location.reload();
 		}
 	}
@@ -73,6 +80,18 @@
 
 <h2>Historie kol</h2>
 
+<div id="table-wrapper">
+{{ template "orgDashboardTable" . }}
+</div>
+
+</body>
+</html>
+{{ end }}
+
+{{ define "orgDashboardTable" }}
+
+{{ $stateSymbol := .Variant.TemplateStateSymbol }}
+
 <table class="table table-bordered" id="history">
 <thead>
 	<tr><th rowspan='2'>Kolo</th><th rowspan='2'>Stav</th><th colspan="{{mult 2 (len .Teams)}}">{{.Variant.TemplateMoneyName}} a akce</th></tr>
@@ -82,33 +101,30 @@
 </thead>
 <tbody>
 	<tr class="info"><th>NOW</th><td>{{.CurrentState.Pretty $stateSymbol}}</td>
-		{{ $prevPart := "" }}
+		{{- $prevPart := "" -}}
 		{{ range .CurrentActions }}
 			<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}></td>
 			<td>{{(index $.AllActions .Action).DisplayName}}</td>
 		{{ end }}
 	</tr>
 	{{range .History}}
-		{{ $n := .RoundNumber }}
-		<tr><th>{{$n}}</th>
-			<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}
+		{{$n := .RoundNumber -}}
+		<tr>
+			<th>{{$n}}</th>
+			<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{end}}
 				{{if gt $n 0}}<span class="hint">{{.StartState.Pretty $stateSymbol}} ⇛ </span>{{end}}{{.FinalState.Pretty $stateSymbol}}
-			</span></td>
-			{{ $prevPart := "" }}
+				{{if .Message}}</span>{{end}}
+			</td>
+			{{- $prevPart := "" -}}
 			{{range .Teams}}
 				<td {{ if ne $prevPart .Team.Part}} style="border-left: 2px solid #444444;"{{ $prevPart = .Team.Part }}{{end}}>
 					{{- if .Found}}{{if gt $n 0}}<span class="hint">{{.StartMoney}} → </span>{{end}}{{.FinalMoney}}{{end -}}
 				</td>
-				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{else}}<span>{{end}}{{(index $.AllActions .Action).DisplayName}}</span></td>
+				<td>{{if .Message}}<span title="{{.Message}}" style="border-bottom: 1px dotted;">{{end}}{{(index $.AllActions .Action).DisplayName}}
+				{{- if .Message}}</span>{{end}}</td>
 			{{end}}
 		</tr>
-	{{end}}
+	{{- end}}
 </tbody>
 </table>
-
-</tbody>
-</table>
-
-</body>
-</html>
 {{ end }}
