@@ -307,8 +307,16 @@ func (s *Server) orgDashboardGenericHandler(template string, w http.ResponseWrit
 
 type orgChartsData struct {
 	GeneralData
-	Teams   []game.Team
-	History []orgDashboardRoundRecord
+	Teams          []game.Team
+	History        []orgDashboardRoundRecord
+	TeamStatistics map[string]orgChartsStats
+	AllActions     map[int]game.ActionDef
+}
+
+type orgChartsStats struct {
+	Team    game.Team
+	Total   int
+	Actions map[int]int
 }
 
 func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
@@ -320,9 +328,33 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 		return teams[i].Part < teams[j].Part
 	})
 
+	history := s.getHistoryRecords(teams)
+	statistics := map[string]orgChartsStats{}
+	for _, team := range teams {
+		actions := map[int]int{}
+		for i := range s.state.GetActions() {
+			actions[i] = 0
+		}
+		statistics[team.Login] = orgChartsStats{
+			Team:    team,
+			Actions: actions,
+		}
+	}
+
+	for _, round := range history {
+		for _, team := range round.Teams {
+			s := statistics[team.Team.Login]
+			s.Total++
+			s.Actions[team.Action]++
+			statistics[team.Team.Login] = s
+		}
+	}
+
 	s.executeTemplate(w, "orgCharts", orgChartsData{
-		GeneralData: s.getGeneralData("Grafy", w, r),
-		Teams:       teams,
-		History:     s.getHistoryRecords(teams),
+		GeneralData:    s.getGeneralData("Grafy", w, r),
+		Teams:          teams,
+		History:        history,
+		TeamStatistics: statistics,
+		AllActions:     s.state.GetActions(),
 	})
 }

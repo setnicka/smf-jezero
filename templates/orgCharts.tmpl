@@ -13,6 +13,21 @@
 	<canvas id="graph-teams"></canvas>
 </div>
 
+<h2>Počty akcí podle týmů</h2>
+<table class="table">
+<tr><th>Tým</th>{{ range .AllActions }}<th>{{.DisplayName}}</th>{{end}}</tr>
+{{ range .TeamStatistics }}
+{{- $total := .Total -}}
+{{- $actionCounts := .Actions}}
+<tr><th>{{ .Team.Name }}</th>
+	{{ range $id, $a := $.AllActions -}}
+		{{$count := index $actionCounts $id}}
+		<td>{{$count}} <small>({{percentage $count $total}})</small></td>
+	{{- end }}
+</tr>
+{{ end }}
+</ul>
+
 <script>
 	window.chartColors = {
 		red: 'rgb(255, 99, 132)',
@@ -80,14 +95,14 @@
 			labels: [{{range .History}}'{{.RoundNumber}}',{{end}}].reverse(),
 			datasets: [
 			{
-				label: 'MOŘE A',
+				label: 'A',
 				backgroundColor: window.chartColors.blue,
 				borderColor: window.chartColors.blue,
 				data: [{{range $.History}}{{.FinalState.GetA}},{{end}}].reverse(),
 				fill: false,
 			},
 			{
-				label: 'MOŘE B',
+				label: 'B',
 				backgroundColor: window.chartColors.red,
 				borderColor: window.chartColors.red,
 				data: [{{range $.History}}{{.FinalState.GetB}},{{end}}].reverse(),
