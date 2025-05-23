@@ -33,7 +33,7 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		login := r.PostFormValue("login")
 		password := r.PostFormValue("password")
-		if s.state.TeamCheckPassword(login, password) {
+		if s.state.TeamCheckLoginPassword(login, password) {
 			session, _ := s.sessionStore.Get(r, sessionCookieName)
 			session.Values["authenticated"] = true
 			session.Values["user"] = login
@@ -70,7 +70,7 @@ func (s *Server) calcTeamHash(team *game.Team) string {
 	hash := s.getGlobalHash()
 
 	actions := s.state.CurrentActions
-	if action, found := actions[team.Login]; found {
+	if action, found := actions[team.ID]; found {
 		hash = append(hash, strconv.Itoa(int(action)))
 	}
 	return strings.Join(hash, "-")
@@ -80,7 +80,7 @@ func (s *Server) calcActionsHash() string {
 	hash := []string{}
 	actions := s.state.CurrentActions
 	for _, team := range s.state.Teams {
-		if action, found := actions[team.Login]; found {
+		if action, found := actions[team.ID]; found {
 			hash = append(hash, strconv.Itoa(int(action)))
 		}
 	}

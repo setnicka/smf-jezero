@@ -61,16 +61,16 @@ func (s *State) InitGame() {
 			PartB: defaultGlobalState,
 		},
 		Time:  time.Now(),
-		Teams: map[string]teamState{},
+		Teams: map[TeamID]teamState{},
 	}
 
 	// 2. Reset actions
 	if s.CurrentActions == nil {
-		s.CurrentActions = map[string]ActionID{}
+		s.CurrentActions = map[TeamID]ActionID{}
 	}
 	for _, team := range s.Teams {
-		s.CurrentActions[team.Login] = defaultAction
-		initRound.Teams[team.Login] = teamState{
+		s.CurrentActions[team.ID] = defaultAction
+		initRound.Teams[team.ID] = teamState{
 			Money: defaultMoney,
 		}
 	}
@@ -104,7 +104,7 @@ func (s *State) EndRound() error {
 	s.Rounds = append(s.Rounds, s.calculateRound(previous, s.CurrentActions))
 	// 3. Reset actions for the next round
 	for _, team := range s.Teams {
-		s.CurrentActions[team.Login] = defaultAction
+		s.CurrentActions[team.ID] = defaultAction
 	}
 	// 4. Save state
 	s.Save()
@@ -128,32 +128,32 @@ func (s *State) SendState() error {
 	return nil
 }
 
-func (s *State) calculateRound(previousRound *RoundState, actions map[string]ActionID) *RoundState {
+func (s *State) calculateRound(previousRound *RoundState, actions map[TeamID]ActionID) *RoundState {
 	roundNumber := previousRound.Number + 1
 
 	// 1. Prepare new round struct
 	newRound := &RoundState{
 		Number:      roundNumber,
 		GlobalState: previousRound.GlobalState.copy(),
-		Teams:       map[string]teamState{},
+		Teams:       map[TeamID]teamState{},
 		Time:        time.Now(),
 	}
 
-	actionsByPart := map[PartID]map[string]ActionID{
+	actionsByPart := map[PartID]map[TeamID]ActionID{
 		PartA: {},
 		PartB: {},
 	}
 	for _, team := range s.Teams {
-		if action, found := actions[team.Login]; found {
-			actionsByPart[team.Part][team.Login] = action
+		if action, found := actions[team.ID]; found {
+			actionsByPart[team.Part][team.ID] = action
 		}
 	}
 
 	// 2. Do actions for all teams
 	for _, team := range s.Teams {
 		// 2.1 Get previous state of money and current action of each team
-		previousMoney := previousRound.getMoney(team.Login)
-		actionID, actionDef := s.getAction(actions, team.Login)
+		previousMoney := previousRound.getMoney(team.ID)
+		actionID, actionDef := s.getAction(actions, team.ID)
 
 		// 2.2 Execute action func
 		var globalDiff, teamMoneyDiff int
@@ -164,10 +164,10 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]Act
 
 		// 2.3 Save results
 		slog.Info("round calculated", "round", newRound.Number,
-			"team", team.Login, "action", actionDef.DisplayName,
+			"team", team.ID, "action", actionDef.DisplayName,
 			"global_diff", globalDiff, "money_diff", teamMoneyDiff)
 		newRound.GlobalState[team.Part] += globalDiff
-		newRound.Teams[team.Login] = teamState{
+		newRound.Teams[team.ID] = teamState{
 			Action:  actionID,
 			Money:   previousMoney + teamMoneyDiff,
 			Message: template.HTML(message),
@@ -209,7 +209,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 		actionEco: {
 			DisplayName:  s.variant.EcoName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, _ int, _ map[string]ActionID) (int, int, string) {
+			action: func(s *State, globalState int, _ int, _ map[TeamID]ActionID) (int, int, string) {
 				return -ecoPollution, globalState, s.variant.EcoMessage(globalState, ecoPollution)
 			},
 		},
@@ -218,7 +218,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 			DisplayName:  s.variant.HarvestName(),
 			DisplayClass: "",
 			check:        func(_ int, money int) bool { return (money >= 0) },
-			action: func(s *State, globalState int, _ int, actions map[string]ActionID) (int, int, string) {
+			action: func(s *State, globalState int, _ int, actions map[TeamID]ActionID) (int, int, string) {
 				// If there were inspection -> penalty
 				if inActions(actionControl, actions) {
 					return -harvestPollution, -harvestPenalty, s.variant.HarvestPenaltyMessage(harvestPenalty)
@@ -232,7 +232,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 		actionCleaning: {
 			DisplayName:  s.variant.CleaningName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, _ int, _ map[string]ActionID) (int, int, string) {
+			action: func(s *State, globalState int, _ int, _ map[TeamID]ActionID) (int, int, string) {
 				cleaning := cleaningAbsolute
 				if globalState > 0 {
 					cleaning = cleaning - int(math.Round(float64(globalState)/float64(cleaningRelative)))
@@ -245,7 +245,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 		actionControl: {
 			DisplayName:  s.variant.InspectionName(),
 			DisplayClass: "",
-			action: func(s *State, _ int, _ int, _ map[string]ActionID) (int, int, string) {
+			action: func(s *State, _ int, _ int, _ map[TeamID]ActionID) (int, int, string) {
 				return 0, 0, s.variant.InspectionMessage()
 			},
 		},
@@ -254,16 +254,16 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 			DisplayName:  s.variant.EspionageName(),
 			DisplayClass: "",
 			check:        func(_ int, money int) bool { return (money >= 0) },
-			action: func(s *State, _ int, _ int, actions map[string]ActionID) (int, int, string) {
+			action: func(s *State, _ int, _ int, actions map[TeamID]ActionID) (int, int, string) {
 				// If there were control -> no espionage
 				if inActions(actionControl, actions) {
 					return 0, -espionageCost, s.variant.EspionageFailMessage()
 				}
 
 				teamActions := map[string]string{}
-				for team, action := range actions {
-					if s.GetTeam(team) != nil {
-						teamActions[s.GetTeam(team).Name] = s.actions[action].DisplayName
+				for teamID, action := range actions {
+					if team := s.GetTeam(teamID); team != nil {
+						teamActions[team.Name] = s.actions[action].DisplayName
 					}
 				}
 				return 0, -espionageCost, s.variant.EspionageSuccessMessage(teamActions)
@@ -276,7 +276,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func inActions(action ActionID, actions map[string]ActionID) bool {
+func inActions(action ActionID, actions map[TeamID]ActionID) bool {
 	for _, a := range actions {
 		if a == action {
 			return true
@@ -293,18 +293,18 @@ func (a ActionDef) Check(globalState int, money int) bool {
 	return a.check(globalState, money)
 }
 
-func (round *RoundState) getMoney(login string) int {
-	if team, found := round.Teams[login]; found {
+func (round *RoundState) getMoney(teamID TeamID) int {
+	if team, found := round.Teams[teamID]; found {
 		return team.Money
 	}
-	slog.Info("New team created, settings default money.", "team", login, "money", defaultMoney)
+	slog.Info("New team created, settings default money.", "team", teamID, "money", defaultMoney)
 	return defaultMoney
 }
 
-func (s *State) getAction(actions map[string]ActionID, login string) (ActionID, ActionDef) {
-	slog := slog.With("team", login)
+func (s *State) getAction(actions map[TeamID]ActionID, teamID TeamID) (ActionID, ActionDef) {
+	slog := slog.With("team", teamID)
 
-	if actionID, found := actions[login]; found {
+	if actionID, found := actions[teamID]; found {
 		if action, found := s.GetActions()[actionID]; found {
 			return actionID, action
 		}

@@ -42,15 +42,15 @@ type teamIndexData struct {
 }
 
 func (s *Server) teamHashHandler(w http.ResponseWriter, r *http.Request) {
-	team := s.state.GetTeam(s.getUser(r))
+	team := s.state.GetTeamByLogin(s.getUser(r))
 	w.Write([]byte(s.calcTeamHash(team)))
 }
 
 func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
-	team := s.state.GetTeam(s.getUser(r))
+	team := s.state.GetTeamByLogin(s.getUser(r))
 	currentState := s.state.GetLastState()
 	var money int
-	if currentStateTeam, found := currentState.Teams[team.Login]; found {
+	if currentStateTeam, found := currentState.Teams[team.ID]; found {
 		money = currentStateTeam.Money
 	}
 
@@ -65,7 +65,7 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 			if action, found := s.state.GetActions()[actionNumber]; found {
 				// Check if action could be performed
 				if action.Check(currentState.GlobalState[team.Part], money) {
-					s.state.CurrentActions[team.Login] = actionNumber
+					s.state.CurrentActions[team.ID] = actionNumber
 					s.state.Save()
 					s.setFlashMessage(w, r, FlashMessage{"success", fmt.Sprintf("Akce '%s' nastavena", action.DisplayName)})
 				} else {
@@ -89,11 +89,11 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		GlobalMessage: currentState.GlobalMessage,
 		Actions:       s.state.GetActions(),
 	}
-	if currentStateTeam, found := currentState.Teams[team.Login]; found {
+	if currentStateTeam, found := currentState.Teams[team.ID]; found {
 		data.Money = currentStateTeam.Money
 		data.GameMessage = currentStateTeam.Message
 	}
-	data.SelectedAction, _ = s.state.CurrentActions[team.Login]
+	data.SelectedAction, _ = s.state.CurrentActions[team.ID]
 
 	// Construct history records
 	for i := len(s.state.Rounds) - 1; i >= 1; i-- {
@@ -107,12 +107,12 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 			GlobalMessage: currentRound.GlobalMessage,
 		}
 
-		if teamState, found := currentRound.Teams[team.Login]; found {
+		if teamState, found := currentRound.Teams[team.ID]; found {
 			record.Action = teamState.Action
 			record.FinalMoney = teamState.Money
 			record.Message = teamState.Message
 		}
-		if lastTeamState, found := lastRound.Teams[team.Login]; found {
+		if lastTeamState, found := lastRound.Teams[team.ID]; found {
 			record.StartMoney = lastTeamState.Money
 		}
 

@@ -67,7 +67,7 @@ func (s *Server) Start() {
 
 		return func(w http.ResponseWriter, r *http.Request) {
 			if s.checkSession(w, r, renew) {
-				if s.state.GetTeam(s.getUser(r)) != nil {
+				if s.state.GetTeamByLogin(s.getUser(r)) != nil {
 					handle(w, r)
 					return
 				}

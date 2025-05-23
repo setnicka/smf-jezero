@@ -28,7 +28,7 @@ type State struct {
 
 	Teams          []Team
 	Rounds         []*RoundState // Round i = state after i-th round (round 0 = start state)
-	CurrentActions map[string]ActionID
+	CurrentActions map[TeamID]ActionID
 }
 
 // GlobalState is number (or numbers) representing state of the jezero
@@ -67,9 +67,13 @@ func (g GlobalState) GetA() int { return g[PartA] }
 // GetB is getter used from templates
 func (g GlobalState) GetB() int { return g[PartB] }
 
+// TeamID is login of the team
+type TeamID string
+
 // Team related config
 type Team struct {
 	Part     PartID // to which part of the game team belongs
+	ID       TeamID
 	Name     string
 	Login    string
 	Salt     string
@@ -81,7 +85,7 @@ type RoundState struct {
 	Number        int
 	GlobalState   GlobalState
 	GlobalMessage template.HTML
-	Teams         map[string]teamState
+	Teams         map[TeamID]teamState
 	Time          time.Time
 }
 
@@ -99,7 +103,7 @@ type teamState struct {
 ////////////
 
 type checkFunc func(globalState int, money int) bool
-type actionFunc func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string)
+type actionFunc func(s *State, globalState int, money int, actions map[TeamID]ActionID) (int, int, string)
 
 // ActionDef holds definition of game action
 type ActionDef struct {

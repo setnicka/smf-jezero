@@ -12,21 +12,21 @@
 {{range .Teams}}
 {{ if ne $prevPart .Part}}
 <thead>
-	<tr><th colspan="4">Part {{ .Part }}</th></tr>
-	<tr><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>
+	<tr><th colspan="5">Part {{ .Part }}</th></tr>
+	<tr><th>ID</th><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>
 </thead>
 {{ $prevPart = .Part }}
 {{ end }}
 	<tr>
-		<td>{{.Login}}</td><td>{{.Name}}</td>
+		<td>{{.ID}}</td><td>{{.Login}}</td><td>{{.Name}}</td>
 		<td>{{if .Password}}🔑&nbsp;{{else}}<i><small>[not set]</small></i>{{end}}
 		<form method="post" class="form-inline">
-			<input type="hidden" name="login" value="{{.Login}}">
+			<input type="hidden" name="teamID" value="{{.ID}}">
 			<input type="password" name="setPassword" placeholder="New password">
 			<input type="submit" class="btn btn-primary" value="Set password">
 		</form>
 		<td><form method="post" onsubmit="return confirm('Delete the {{.Name}} team?');" class="form-inline">
-			<input type="hidden" name="deleteTeam" value="{{.Login}}">
+			<input type="hidden" name="deleteTeam" value="{{.ID}}">
 			<input type="submit" class="btn btn-danger" value="Delete team">
 		</form></td>
 		</td>

@@ -55,8 +55,8 @@ func (s *State) GetTeams() []Team {
 	return s.Teams
 }
 
-// GetTeam identified by the login
-func (s *State) GetTeam(login string) *Team {
+// GetTeamByLogin identified by the login
+func (s *State) GetTeamByLogin(login string) *Team {
 	for i, team := range s.Teams {
 		if team.Login == login {
 			return &s.Teams[i]
@@ -65,44 +65,54 @@ func (s *State) GetTeam(login string) *Team {
 	return nil
 }
 
+// GetTeam identified by the ID
+func (s *State) GetTeam(teamID TeamID) *Team {
+	for i, team := range s.Teams {
+		if team.ID == teamID {
+			return &s.Teams[i]
+		}
+	}
+	return nil
+}
+
 // AddTeam adds team with given parameters (notice: password is not set)
 func (s *State) AddTeam(login string, name string, part PartID) error {
-	if s.GetTeam(login) != nil {
+	if s.GetTeamByLogin(login) != nil {
 		return fmt.Errorf("Team with name '%s' already exists", login)
 	}
-	s.Teams = append(s.Teams, Team{Login: login, Name: name, Part: part})
+	s.Teams = append(s.Teams, Team{ID: TeamID(login), Login: login, Name: name, Part: part})
 	s.Save()
 	return nil
 }
 
-// DeleteTeam identified by login
-func (s *State) DeleteTeam(login string) error {
+// DeleteTeam identified by the ID
+func (s *State) DeleteTeam(teamID TeamID) error {
 	for i, team := range s.Teams {
-		if team.Login == login {
+		if team.ID == teamID {
 			s.Teams = append(s.Teams[:i], s.Teams[i+1:]...)
 			s.Save()
 			return nil
 		}
 	}
-	return fmt.Errorf("Cannot find team with login '%s'", login)
+	return fmt.Errorf("Cannot find team with ID '%s'", teamID)
 }
 
 // TeamSetPassword sets salted password of the team
-func (s *State) TeamSetPassword(login string, password string) {
-	team := s.GetTeam(login)
+func (s *State) TeamSetPassword(teamID TeamID, password string) {
+	team := s.GetTeam(teamID)
 	if team == nil {
 		return
 	}
-	slog.Debug("new password set", "team", login)
+	slog.Debug("new password set", "team", teamID)
 	team.Salt, _ = genRandomString(12)
 	team.Password = fmt.Sprintf("%x", sha256.Sum256([]byte(team.Salt+password)))
 	s.Save()
 
 }
 
-// TeamCheckPassword returns true if the password matches for team with given login
-func (s *State) TeamCheckPassword(login string, password string) bool {
-	team := s.GetTeam(login)
+// TeamCheckLoginPassword returns true if the password matches for team with given login
+func (s *State) TeamCheckLoginPassword(login string, password string) bool {
+	team := s.GetTeamByLogin(login)
 	if team == nil {
 		return false
 	}

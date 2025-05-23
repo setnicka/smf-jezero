@@ -54,13 +54,15 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("deleteTeam") != "" {
-			if team := s.state.GetTeam(r.PostFormValue("deleteTeam")); team != nil {
-				s.state.DeleteTeam(r.PostFormValue("deleteTeam"))
+			teamID := game.TeamID(r.PostFormValue("deleteTeam"))
+			if team := s.state.GetTeam(teamID); team != nil {
+				s.state.DeleteTeam(teamID)
 				s.setFlashMessage(w, r, FlashMessage{"success", "Team deleted"})
 			}
 		} else if r.PostFormValue("setPassword") != "" {
-			if team := s.state.GetTeam(r.PostFormValue("login")); team != nil {
-				s.state.TeamSetPassword(r.PostFormValue("login"), r.PostFormValue("setPassword"))
+			teamID := game.TeamID(r.PostFormValue("teamID"))
+			if team := s.state.GetTeam(teamID); team != nil {
+				s.state.TeamSetPassword(teamID, r.PostFormValue("setPassword"))
 				s.setFlashMessage(w, r, FlashMessage{"success", "Password set"})
 			}
 		} else if r.PostFormValue("newTeamLogin") != "" {
@@ -164,14 +166,14 @@ func (s *Server) getHistoryRecords(teams []game.Team) []orgDashboardRoundRecord 
 				Team: team,
 			}
 
-			if teamState, found := currentRound.Teams[team.Login]; found {
+			if teamState, found := currentRound.Teams[team.ID]; found {
 				teamRecord.Found = true
 				teamRecord.Action = teamState.Action
 				teamRecord.FinalMoney = teamState.Money
 				teamRecord.Message = teamState.Message
 			}
 			if i > 0 {
-				if lastTeamState, found := lastRound.Teams[team.Login]; found {
+				if lastTeamState, found := lastRound.Teams[team.ID]; found {
 					teamRecord.StartMoney = lastTeamState.Money
 				}
 			}
@@ -293,7 +295,7 @@ func (s *Server) orgDashboardGenericHandler(template string, w http.ResponseWrit
 	}
 	for _, team := range teams {
 		data.CurrentActions = append(data.CurrentActions, currentAction{
-			Action: s.state.CurrentActions[team.Login],
+			Action: s.state.CurrentActions[team.ID],
 			Team:   team,
 		})
 	}
@@ -307,7 +309,7 @@ type orgChartsData struct {
 	GeneralData
 	Teams          []game.Team
 	History        []orgDashboardRoundRecord
-	TeamStatistics map[string]orgChartsStats
+	TeamStatistics map[game.TeamID]orgChartsStats
 	AllActions     map[game.ActionID]game.ActionDef
 }
 
@@ -327,13 +329,13 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	history := s.getHistoryRecords(teams)
-	statistics := map[string]orgChartsStats{}
+	statistics := map[game.TeamID]orgChartsStats{}
 	for _, team := range teams {
 		actions := map[game.ActionID]int{}
 		for i := range s.state.GetActions() {
 			actions[i] = 0
 		}
-		statistics[team.Login] = orgChartsStats{
+		statistics[team.ID] = orgChartsStats{
 			Team:    team,
 			Actions: actions,
 		}
@@ -341,10 +343,10 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 
 	for _, round := range history {
 		for _, team := range round.Teams {
-			s := statistics[team.Team.Login]
+			s := statistics[team.Team.ID]
 			s.Total++
 			s.Actions[team.Action]++
-			statistics[team.Team.Login] = s
+			statistics[team.Team.ID] = s
 		}
 	}
 
