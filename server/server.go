@@ -3,11 +3,11 @@ package server
 import (
 	"flag"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/coreos/go-log/log"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 
@@ -49,7 +49,7 @@ func New(cfg config.ServerConfig, game *game.State, variant game.Variant) *Serve
 
 // Start the HTTP server for the game
 func (s *Server) Start() {
-	log.Info("Starting server...")
+	slog.Info("starting server")
 	flag.Parse()
 
 	// 1. Construct router
@@ -114,7 +114,7 @@ func (s *Server) Start() {
 
 	// 2. Load templates
 	if _, err := s.getTemplates(); err != nil {
-		log.Errorf("Cannot load templates: %v", err)
+		slog.Error("cannot load templates", "err", err)
 		return
 	}
 
@@ -122,7 +122,7 @@ func (s *Server) Start() {
 	go func() {
 		for range s.countdownTimer.C {
 			s.mutex.Lock()
-			log.Infof("Next round by timer")
+			slog.Info("next round by timer")
 			s.state.EndRound()
 			s.countdownDuration = s.nextCountdown
 			s.resetTimer()
@@ -131,10 +131,10 @@ func (s *Server) Start() {
 	}()
 
 	// 4. Listen on given port
-	log.Infof("Server started on %s", s.cfg.Listen)
+	slog.Info("server started", "listen", s.cfg.Listen)
 	err := http.ListenAndServe(s.cfg.Listen, router)
 	if err != nil {
-		log.Errorf("ERROR: %v", err)
+		slog.Error("server failed", "err", err)
 	}
 }
 

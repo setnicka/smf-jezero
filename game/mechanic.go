@@ -3,11 +3,11 @@ package game
 import (
 	"fmt"
 	"html/template"
+	"log/slog"
 	"math"
 	"net"
 	"time"
 
-	"github.com/coreos/go-log/log"
 	"github.com/pkg/errors"
 )
 
@@ -50,7 +50,7 @@ const (
 
 // InitGame resets the whole game (deletes all rounds).
 func (s *State) InitGame() {
-	log.Debugf("Init state of the game - adding initial round and resetting current actions")
+	slog.Debug("Init state of the game - adding initial round and resetting current actions.")
 
 	// 1. Prepare init round
 	initRound := &RoundState{
@@ -163,7 +163,9 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]Act
 		}
 
 		// 2.3 Save results
-		log.Debugf("[Round %d - team '%s'] Action '%s': Global state change %d, money change %d", newRound.Number, team.Name, actionDef.DisplayName, globalDiff, teamMoneyDiff)
+		slog.Info("round calculated", "round", newRound.Number,
+			"team", team.Login, "action", actionDef.DisplayName,
+			"global_diff", globalDiff, "money_diff", teamMoneyDiff)
 		newRound.GlobalState[team.Part] += globalDiff
 		newRound.Teams[team.Login] = teamState{
 			Action:  actionID,
@@ -296,18 +298,23 @@ func (round *RoundState) getMoney(login string) int {
 	if team, found := round.Teams[login]; found {
 		return team.Money
 	}
-	log.Infof("New team '%s', initializing to the default money '%d'", login, DEFAULT_MONEY)
+	slog.Info("New team created, settings default money.", "team", login, "money", DEFAULT_MONEY)
 	return DEFAULT_MONEY
 }
 
 func (s *State) getAction(actions map[string]ActionID, login string) (ActionID, ActionDef) {
+	slog := slog.With("team", login)
+
 	if actionID, found := actions[login]; found {
-		if action, found := s.actions[actionID]; found {
+		if action, found := s.GetActions()[actionID]; found {
 			return actionID, action
 		}
-		log.Infof("Team %s - There is no action with ID '%d', fallbacking to the default action '%s'.", login, actionID, s.actions[DEFAULT_ACTION].DisplayName)
+		slog.Warn("unknown action set, fallback to the default action",
+			"action_id", actionID,
+			"fallback_action", s.actions[DEFAULT_ACTION].DisplayName)
 		return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
 	}
-	log.Infof("No action for team '%s', fallbacking to the default action '%s'.", login, s.actions[DEFAULT_ACTION].DisplayName)
+	slog.Info("no action set, fallback to the default action ",
+		"fallback_action", s.actions[DEFAULT_ACTION].DisplayName)
 	return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
 }

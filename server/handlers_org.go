@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	//"github.com/coreos/go-log/log"
-
 	"github.com/setnicka/smf-jezero/game"
 )
 

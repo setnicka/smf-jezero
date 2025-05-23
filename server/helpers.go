@@ -2,12 +2,11 @@ package server
 
 import (
 	"encoding/gob"
+	"log/slog"
 	"net/http"
 	"os"
 
 	"github.com/gorilla/sessions"
-
-	"github.com/coreos/go-log/log"
 )
 
 func (s *Server) isOrg(r *http.Request) bool {
@@ -26,7 +25,7 @@ func (s *Server) getSession(r *http.Request) *sessions.Session {
 	//log := logger.GetDefault()
 	session, err := s.sessionStore.Get(r, sessionCookieName)
 	if err != nil {
-		log.Errorf("Cannot get session '%s': %v", sessionCookieName, err)
+		slog.Error("cannot get session", "session", sessionCookieName, "err", err)
 		return nil
 	}
 	return session
@@ -85,7 +84,7 @@ func (s *Server) setFlashMessage(w http.ResponseWriter, r *http.Request, message
 	session.AddFlash(message)
 	err = session.Save(r, w)
 	if err != nil {
-		log.Errorf("Cannot save flash message: %v", err)
+		slog.Error("cannot save flash message", "err", err)
 	}
 }
 
@@ -107,7 +106,7 @@ func (s *Server) getFlashMessages(w http.ResponseWriter, r *http.Request) []Flas
 	// 3. Delete flash messages by saving session
 	err = session.Save(r, w)
 	if err != nil {
-		log.Errorf("Problem during loading flash messages: %v", err)
+		slog.Error("problem during loading flash messages", "err", err)
 	}
 
 	return parsedFlashes

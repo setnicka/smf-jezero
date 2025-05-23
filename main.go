@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
-	"log"
+	"log/slog"
+	"os"
 
+	"github.com/lmittmann/tint"
 	"github.com/setnicka/smf-jezero/config"
 	"github.com/setnicka/smf-jezero/game"
 	"github.com/setnicka/smf-jezero/game/variants"
@@ -17,14 +19,20 @@ var (
 ////////////////////////////////////////////////////////////////////////////////
 
 func main() {
+	logger := slog.New(tint.NewHandler(os.Stderr, &tint.Options{
+		Level: slog.LevelDebug,
+	}))
+	slog.SetDefault(logger)
+
 	cfg, err := config.Load(*configFile)
 	if err != nil {
-		log.Fatalf("Config error: %v", err)
+		slog.Error("cannot load config", "err", err)
+		os.Exit(1)
 	}
 
 	variant := variants.Get(cfg.Variant)
 	if variant == nil {
-		log.Fatalf("Variant '%s' does not exist", cfg.Variant)
+		slog.Error("this variant does not exists", "variant", cfg.Variant)
 	}
 
 	game := game.Init(cfg.Game, variant)

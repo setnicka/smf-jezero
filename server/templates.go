@@ -3,27 +3,28 @@ package server
 import (
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
-
-	"github.com/coreos/go-log/log"
 )
 
 // Execute template given by its name and with given data with all the error handling.
 func (s *Server) executeTemplate(w http.ResponseWriter, templateName string, data interface{}) {
-	log.Debugf("Executing template '%s'", templateName)
+	slog := slog.With("template", templateName)
+
+	slog.Debug("executing template")
 	template, err := s.getTemplates()
 	if err != nil || template == nil {
-		log.Errorf("Error getting templates: %v ", err)
+		slog.Error("error getting templates", "err", err)
 		fmt.Fprintf(w, "Error getting templates: %v", err)
 		return
 	}
 	err = template.ExecuteTemplate(w, templateName, data)
 	if err != nil {
-		log.Errorf("Error executing template '%s': %v", templateName, err)
+		slog.Error("error executing template", "err", err)
 		fmt.Fprintf(w, "Error executing template. %v", err)
 	}
 }
@@ -39,13 +40,13 @@ func (s *Server) getTemplates() (*template.Template, error) {
 	changed := false
 	for _, file := range templateFiles {
 		if fileChanged(file) {
-			log.Debugf("Found (new/changed) template file '%s'", file)
+			slog.Debug("found (new/changed) template", "file", file)
 			changed = true
 		}
 	}
 
 	if changed {
-		log.Debug("Parsing all template files because of new/changed template files")
+		slog.Debug("parsing all template files because of new/changed template files")
 		s.templates, err = template.New("").Funcs(templateFuncs).ParseGlob(globPath)
 		if err != nil {
 			return nil, err

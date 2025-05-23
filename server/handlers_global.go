@@ -1,13 +1,13 @@
 package server
 
 import (
+	"log/slog"
 	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/coreos/go-log/log"
 	"github.com/setnicka/smf-jezero/game"
 )
 
@@ -21,7 +21,7 @@ func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Req
 	if flashMessages := s.getFlashMessages(w, r); len(flashMessages) > 0 {
 		data.MessageType = flashMessages[0].Type
 		data.Message = flashMessages[0].Message
-		log.Debugf("Flash message '%s'", flashMessages[0].Message)
+		slog.Debug("flash message", "message", flashMessages[0].Message)
 	}
 	return data
 }

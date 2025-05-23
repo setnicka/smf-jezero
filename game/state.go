@@ -4,18 +4,18 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"log/slog"
 	"os"
 	"path"
 	"time"
 
-	"github.com/coreos/go-log/log"
 	"github.com/setnicka/smf-jezero/config"
 )
 
 // Init the Game
 func Init(cfg config.GameConfig, variant Variant) *State {
-	log.Debug("Initializing game state")
+	slog.Debug("initializing game state")
 	state := &State{
 		cfg:     cfg,
 		variant: variant,
@@ -26,13 +26,14 @@ func Init(cfg config.GameConfig, variant Variant) *State {
 	jsonFile, err := os.Open(cfg.StateFile)
 	if err == nil {
 		defer jsonFile.Close()
+		slog := slog.With("file", cfg.StateFile)
 
-		log.Debugf("Loading state from file '%s'", cfg.StateFile)
-		jsonBytes, _ := ioutil.ReadAll(jsonFile)
+		slog.Debug("loading state")
+		jsonBytes, _ := io.ReadAll(jsonFile)
 		if err = json.Unmarshal(jsonBytes, &state); err != nil {
-			log.Errorf("Problem during loading state from file: %v", err)
+			slog.Error("problem during loading state from file", "err", err)
 		} else {
-			log.Debug("State loaded")
+			slog.Debug("state loaded")
 		}
 	}
 
@@ -85,7 +86,7 @@ func (s *State) TeamSetPassword(login string, password string) {
 	if team == nil {
 		return
 	}
-	log.Debugf("Saving new password for team '%s'", login)
+	slog.Debug("new password set", "team", login)
 	team.Salt, _ = genRandomString(12)
 	team.Password = fmt.Sprintf("%x", sha256.Sum256([]byte(team.Salt+password)))
 	s.Save()
@@ -102,7 +103,8 @@ func (s *State) TeamCheckPassword(login string, password string) bool {
 }
 
 func (s *State) Save() {
-	log.Debug("Saving actual state into file")
+	slog := slog.With("file", s.cfg.StateFile)
+
 	// 1. If exists current state move it into folder
 	if _, err := os.Stat(s.cfg.StateFile); err == nil {
 		// Ensure dir exists
@@ -113,11 +115,14 @@ func (s *State) Save() {
 	// 2. Marshal state into json
 	bytes, err := json.MarshalIndent(s, "", "\t")
 	if err != nil {
-		log.Errorf("Cannot save actual state into json: %v", err)
+		slog.Error("cannot marshall actual state into json", "err", err)
 		return
 	}
 
-	if err := ioutil.WriteFile(s.cfg.StateFile, bytes, 0644); err != nil {
-		log.Errorf("Cannot save json of actual state into file '%s': %v", s.cfg.StateFile, err)
+	if err := os.WriteFile(s.cfg.StateFile, bytes, 0644); err != nil {
+		slog.Error("cannot save state", "err", err)
+		return
 	}
+
+	slog.Debug("state saved")
 }
