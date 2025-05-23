@@ -1,18 +1,18 @@
 module github.com/setnicka/smf-jezero
 
-go 1.20
+go 1.24
 
 require (
 	github.com/coreos/go-log v0.0.0-20180308165134-b22fd89e1882
-	github.com/go-chi/render v1.0.1
-	github.com/gorilla/mux v1.6.3-0.20180605211556-cb4698366aa6
-	github.com/gorilla/sessions v1.1.1
-	github.com/pkg/errors v0.8.0
+	github.com/go-chi/render v1.0.3
+	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/sessions v1.4.0
+	github.com/pkg/errors v0.9.1
 )
 
 require (
-	github.com/coreos/go-systemd v0.0.0-20170731111925-d21964639418 // indirect
-	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/securecookie v1.1.2-0.20180608144417-78f3d318a8bf // indirect
-	github.com/kardianos/osext v0.0.0-20170510131534-ae77be60afb1 // indirect
+	github.com/ajg/form v1.5.1 // indirect
+	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/gorilla/securecookie v1.1.2 // indirect
+	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0 // indirect
 )
