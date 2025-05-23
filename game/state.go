@@ -1,3 +1,4 @@
+// Package game contains the whole game mechanic and saving/loading of states.
 package game
 
 import (
@@ -44,14 +45,17 @@ func Init(cfg config.GameConfig, variant Variant) *State {
 	return state
 }
 
+// HasNotifyTargets return true if the tcp_notify section of the config is nonempty
 func (s *State) HasNotifyTargets() bool {
 	return len(s.cfg.TCPNotify) > 0
 }
 
+// GetTeams returns config of all teams of the given game
 func (s *State) GetTeams() []Team {
 	return s.Teams
 }
 
+// GetTeam identified by the login
 func (s *State) GetTeam(login string) *Team {
 	for i, team := range s.Teams {
 		if team.Login == login {
@@ -61,7 +65,8 @@ func (s *State) GetTeam(login string) *Team {
 	return nil
 }
 
-func (s *State) AddTeam(login string, name string, part GamePart) error {
+// AddTeam adds team with given parameters (notice: password is not set)
+func (s *State) AddTeam(login string, name string, part PartID) error {
 	if s.GetTeam(login) != nil {
 		return fmt.Errorf("Team with name '%s' already exists", login)
 	}
@@ -70,6 +75,7 @@ func (s *State) AddTeam(login string, name string, part GamePart) error {
 	return nil
 }
 
+// DeleteTeam identified by login
 func (s *State) DeleteTeam(login string) error {
 	for i, team := range s.Teams {
 		if team.Login == login {
@@ -81,6 +87,7 @@ func (s *State) DeleteTeam(login string) error {
 	return fmt.Errorf("Cannot find team with login '%s'", login)
 }
 
+// TeamSetPassword sets salted password of the team
 func (s *State) TeamSetPassword(login string, password string) {
 	team := s.GetTeam(login)
 	if team == nil {
@@ -93,6 +100,7 @@ func (s *State) TeamSetPassword(login string, password string) {
 
 }
 
+// TeamCheckPassword returns true if the password matches for team with given login
 func (s *State) TeamCheckPassword(login string, password string) bool {
 	team := s.GetTeam(login)
 	if team == nil {
@@ -102,6 +110,7 @@ func (s *State) TeamCheckPassword(login string, password string) bool {
 	return (pass == team.Password)
 }
 
+// Save the game state to the file specified in configuration
 func (s *State) Save() {
 	slog := slog.With("file", s.cfg.StateFile)
 

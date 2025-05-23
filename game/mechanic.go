@@ -15,33 +15,34 @@ import (
 
 const (
 	// Game constants
-	DEFAULT_GLOBAL_STATE = 100
-	DEFAULT_MONEY        = 100
+	defaultGlobalState = 100
+	defaultMoney       = 100
 
-	ECO_POLLUTION = 1 // znečištění po ekologické výrobě
+	ecoPollution = 1 // znečištění po ekologické výrobě
 
-	HARVEST_POLLUTION = 5 // znečištění po neekologické výrobě
-	HARVEST_BONUS     = 100
-	HARVEST_PENALTY   = 100
+	harvestPollution = 5 // znečištění po neekologické výrobě
+	harvestBonus     = 100
+	harvestPenalty   = 100
 
-	CLEANING_ABSOLUTE = 10
-	CLEANING_RELATIVE = 20
+	cleaningAbsolute = 10
+	cleaningRelative = 20
 
-	SPIONAGE_COST = 25
+	espionageCost = 25
 )
 
+// ActionID represents one of the actions defined in game/mechanic.go
 type ActionID int
 
 const (
 	// Actions constants
-	ACTION_NOTHING ActionID = iota
-	ACTION_ECO
-	ACTION_HARVEST
-	ACTION_CLEANING
-	ACTION_CONTROL
-	ACTION_SPIONAGE
+	actionNothing ActionID = iota
+	actionEco
+	actionHarvest
+	actionCleaning
+	actionControl
+	actionEspionage
 
-	DEFAULT_ACTION = ACTION_NOTHING
+	defaultAction = actionNothing
 )
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -55,9 +56,9 @@ func (s *State) InitGame() {
 	// 1. Prepare init round
 	initRound := &RoundState{
 		Number: 0,
-		GlobalState: map[GamePart]int{
-			PartA: DEFAULT_GLOBAL_STATE,
-			PartB: DEFAULT_GLOBAL_STATE,
+		GlobalState: map[PartID]int{
+			PartA: defaultGlobalState,
+			PartB: defaultGlobalState,
 		},
 		Time:  time.Now(),
 		Teams: map[string]teamState{},
@@ -68,9 +69,9 @@ func (s *State) InitGame() {
 		s.CurrentActions = map[string]ActionID{}
 	}
 	for _, team := range s.Teams {
-		s.CurrentActions[team.Login] = DEFAULT_ACTION
+		s.CurrentActions[team.Login] = defaultAction
 		initRound.Teams[team.Login] = teamState{
-			Money: DEFAULT_MONEY,
+			Money: defaultMoney,
 		}
 	}
 	s.Rounds = []*RoundState{initRound}
@@ -83,9 +84,8 @@ func (s *State) InitGame() {
 func (s *State) GetLastState() *RoundState {
 	if len(s.Rounds) > 0 {
 		return s.Rounds[len(s.Rounds)-1]
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // GetRoundNumber returns number of the current round.
@@ -104,7 +104,7 @@ func (s *State) EndRound() error {
 	s.Rounds = append(s.Rounds, s.calculateRound(previous, s.CurrentActions))
 	// 3. Reset actions for the next round
 	for _, team := range s.Teams {
-		s.CurrentActions[team.Login] = DEFAULT_ACTION
+		s.CurrentActions[team.Login] = defaultAction
 	}
 	// 4. Save state
 	s.Save()
@@ -139,7 +139,7 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]Act
 		Time:        time.Now(),
 	}
 
-	actionsByPart := map[GamePart]map[string]ActionID{
+	actionsByPart := map[PartID]map[string]ActionID{
 		PartA: {},
 		PartB: {},
 	}
@@ -201,63 +201,63 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 	}
 
 	s.actions = map[ActionID]ActionDef{
-		ACTION_NOTHING: {
+		actionNothing: {
 			DisplayName:  s.variant.NopName(),
 			DisplayClass: "",
 		},
 
-		ACTION_ECO: {
+		actionEco: {
 			DisplayName:  s.variant.EcoName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
-				return -ECO_POLLUTION, globalState, s.variant.EcoMessage(globalState, ECO_POLLUTION)
+			action: func(s *State, globalState int, _ int, _ map[string]ActionID) (int, int, string) {
+				return -ecoPollution, globalState, s.variant.EcoMessage(globalState, ecoPollution)
 			},
 		},
 
-		ACTION_HARVEST: {
+		actionHarvest: {
 			DisplayName:  s.variant.HarvestName(),
 			DisplayClass: "",
-			check:        func(globalState int, money int) bool { return (money >= 0) },
-			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
+			check:        func(_ int, money int) bool { return (money >= 0) },
+			action: func(s *State, globalState int, _ int, actions map[string]ActionID) (int, int, string) {
 				// If there were inspection -> penalty
-				if inActions(ACTION_CONTROL, actions) {
-					return -HARVEST_POLLUTION, -HARVEST_PENALTY, s.variant.HarvestPenaltyMessage(HARVEST_PENALTY)
+				if inActions(actionControl, actions) {
+					return -harvestPollution, -harvestPenalty, s.variant.HarvestPenaltyMessage(harvestPenalty)
 				}
 
-				gatheredMoney := globalState + HARVEST_BONUS
-				return -HARVEST_POLLUTION, gatheredMoney, s.variant.HarvestSuccessMessage(gatheredMoney, HARVEST_POLLUTION)
+				gatheredMoney := globalState + harvestBonus
+				return -harvestPollution, gatheredMoney, s.variant.HarvestSuccessMessage(gatheredMoney, harvestPollution)
 			},
 		},
 
-		ACTION_CLEANING: {
+		actionCleaning: {
 			DisplayName:  s.variant.CleaningName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
-				cleaning := CLEANING_ABSOLUTE
+			action: func(s *State, globalState int, _ int, _ map[string]ActionID) (int, int, string) {
+				cleaning := cleaningAbsolute
 				if globalState > 0 {
-					cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
+					cleaning = cleaning - int(math.Round(float64(globalState)/float64(cleaningRelative)))
 				}
 
 				return cleaning, 0, s.variant.CleaningMessage(cleaning)
 			},
 		},
 
-		ACTION_CONTROL: {
+		actionControl: {
 			DisplayName:  s.variant.InspectionName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
+			action: func(s *State, _ int, _ int, _ map[string]ActionID) (int, int, string) {
 				return 0, 0, s.variant.InspectionMessage()
 			},
 		},
 
-		ACTION_SPIONAGE: {
+		actionEspionage: {
 			DisplayName:  s.variant.EspionageName(),
 			DisplayClass: "",
-			check:        func(globalState int, money int) bool { return (money >= 0) },
-			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
-				// If there were control -> no spionage
-				if inActions(ACTION_CONTROL, actions) {
-					return 0, -SPIONAGE_COST, s.variant.EspionageFailMessage()
+			check:        func(_ int, money int) bool { return (money >= 0) },
+			action: func(s *State, _ int, _ int, actions map[string]ActionID) (int, int, string) {
+				// If there were control -> no espionage
+				if inActions(actionControl, actions) {
+					return 0, -espionageCost, s.variant.EspionageFailMessage()
 				}
 
 				teamActions := map[string]string{}
@@ -266,7 +266,7 @@ func (s *State) GetActions() map[ActionID]ActionDef {
 						teamActions[s.GetTeam(team).Name] = s.actions[action].DisplayName
 					}
 				}
-				return 0, -SPIONAGE_COST, s.variant.EspionageSuccessMessage(teamActions)
+				return 0, -espionageCost, s.variant.EspionageSuccessMessage(teamActions)
 			},
 		},
 	}
@@ -289,17 +289,16 @@ func inActions(action ActionID, actions map[string]ActionID) bool {
 func (a ActionDef) Check(globalState int, money int) bool {
 	if a.check == nil {
 		return true
-	} else {
-		return a.check(globalState, money)
 	}
+	return a.check(globalState, money)
 }
 
 func (round *RoundState) getMoney(login string) int {
 	if team, found := round.Teams[login]; found {
 		return team.Money
 	}
-	slog.Info("New team created, settings default money.", "team", login, "money", DEFAULT_MONEY)
-	return DEFAULT_MONEY
+	slog.Info("New team created, settings default money.", "team", login, "money", defaultMoney)
+	return defaultMoney
 }
 
 func (s *State) getAction(actions map[string]ActionID, login string) (ActionID, ActionDef) {
@@ -311,10 +310,10 @@ func (s *State) getAction(actions map[string]ActionID, login string) (ActionID, 
 		}
 		slog.Warn("unknown action set, fallback to the default action",
 			"action_id", actionID,
-			"fallback_action", s.actions[DEFAULT_ACTION].DisplayName)
-		return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
+			"fallback_action", s.actions[defaultAction].DisplayName)
+		return defaultAction, s.actions[defaultAction]
 	}
 	slog.Info("no action set, fallback to the default action ",
-		"fallback_action", s.actions[DEFAULT_ACTION].DisplayName)
-	return DEFAULT_ACTION, s.actions[DEFAULT_ACTION]
+		"fallback_action", s.actions[defaultAction].DisplayName)
+	return defaultAction, s.actions[defaultAction]
 }

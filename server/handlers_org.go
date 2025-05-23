@@ -64,7 +64,7 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 				s.setFlashMessage(w, r, FlashMessage{"success", "Password set"})
 			}
 		} else if r.PostFormValue("newTeamLogin") != "" {
-			var part game.GamePart
+			var part game.PartID
 			switch r.PostFormValue("newTeamPart") {
 			case string(game.PartA):
 				part = game.PartA

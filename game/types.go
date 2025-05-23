@@ -9,15 +9,18 @@ import (
 	"github.com/setnicka/smf-jezero/config"
 )
 
-type GamePart string
+// PartID is identification of the game section
+type PartID string
 
+// Defined game parts (WARN: when adding another part, lot of game logic must be modified)
 const (
-	PartA GamePart = "A"
-	PartB GamePart = "B"
+	PartA PartID = "A"
+	PartB PartID = "B"
 )
 
-var GameParts = []GamePart{PartA, PartB}
+var allParts = []PartID{PartA, PartB}
 
+// State of the game
 type State struct {
 	cfg     config.GameConfig
 	variant Variant
@@ -30,44 +33,50 @@ type State struct {
 
 // GlobalState is number (or numbers) representing state of the jezero
 // type GlobalState int
-type GlobalState map[GamePart]int
+type GlobalState map[PartID]int
 
 // Hash for automatic checking
 func (g GlobalState) Hash() string {
 	parts := []string{}
-	for _, part := range GameParts {
+	for _, part := range allParts {
 		parts = append(parts, fmt.Sprintf("%s%d", part, g[part]))
 	}
 	return strings.Join(parts, "-")
 }
 
+// Pretty print of the global state
 func (g GlobalState) Pretty(symbol string) string {
 	parts := []string{}
-	for _, part := range GameParts {
+	for _, part := range allParts {
 		parts = append(parts, fmt.Sprintf("%s:%d%s", part, g[part], symbol))
 	}
 	return strings.Join(parts, ", ")
 }
 
 func (g GlobalState) copy() GlobalState {
-	new := GlobalState{}
-	for _, part := range GameParts {
-		new[part] = g[part]
+	newState := GlobalState{}
+	for _, part := range allParts {
+		newState[part] = g[part]
 	}
-	return new
+	return newState
 }
 
+// GetA is getter used from templates
 func (g GlobalState) GetA() int { return g[PartA] }
+
+// GetB is getter used from templates
 func (g GlobalState) GetB() int { return g[PartB] }
 
+// Team related config
 type Team struct {
-	Part     GamePart // to which part of the game team belongs
+	Part     PartID // to which part of the game team belongs
 	Name     string
 	Login    string
 	Salt     string
 	Password string
 }
 
+// RoundState holds global state and team states for given round
 type RoundState struct {
 	Number        int
 	GlobalState   GlobalState
@@ -76,6 +85,7 @@ type RoundState struct {
 	Time          time.Time
 }
 
+// RoundNumber in human readable form (indexed from 1)
 func (rs RoundState) RoundNumber() int {
 	return rs.Number + 1
 }
@@ -91,6 +101,7 @@ type teamState struct {
 type checkFunc func(globalState int, money int) bool
 type actionFunc func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string)
 
+// ActionDef holds definition of game action
 type ActionDef struct {
 	DisplayName  string
 	DisplayClass string
