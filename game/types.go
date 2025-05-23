@@ -21,11 +21,11 @@ var GameParts = []GamePart{PartA, PartB}
 type State struct {
 	cfg     config.GameConfig
 	variant Variant
-	actions map[int]ActionDef
+	actions map[ActionID]ActionDef
 
 	Teams          []Team
 	Rounds         []*RoundState // Round i = state after i-th round (round 0 = start state)
-	CurrentActions map[string]int
+	CurrentActions map[string]ActionID
 }
 
 // GlobalState is number (or numbers) representing state of the jezero
@@ -81,7 +81,7 @@ func (rs RoundState) RoundNumber() int {
 }
 
 type teamState struct {
-	Action  int
+	Action  ActionID
 	Message template.HTML
 	Money   int
 }
@@ -89,7 +89,7 @@ type teamState struct {
 ////////////
 
 type checkFunc func(globalState int, money int) bool
-type actionFunc func(s *State, globalState int, money int, actions map[string]int) (int, int, string)
+type actionFunc func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string)
 
 type ActionDef struct {
 	DisplayName  string

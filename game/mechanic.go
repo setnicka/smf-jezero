@@ -28,9 +28,13 @@ const (
 	CLEANING_RELATIVE = 20
 
 	SPIONAGE_COST = 25
+)
 
+type ActionID int
+
+const (
 	// Actions constants
-	ACTION_NOTHING = iota
+	ACTION_NOTHING ActionID = iota
 	ACTION_ECO
 	ACTION_HARVEST
 	ACTION_CLEANING
@@ -61,7 +65,7 @@ func (s *State) InitGame() {
 
 	// 2. Reset actions
 	if s.CurrentActions == nil {
-		s.CurrentActions = map[string]int{}
+		s.CurrentActions = map[string]ActionID{}
 	}
 	for _, team := range s.Teams {
 		s.CurrentActions[team.Login] = DEFAULT_ACTION
@@ -124,7 +128,7 @@ func (s *State) SendState() error {
 	return nil
 }
 
-func (s *State) calculateRound(previousRound *RoundState, actions map[string]int) *RoundState {
+func (s *State) calculateRound(previousRound *RoundState, actions map[string]ActionID) *RoundState {
 	roundNumber := previousRound.Number + 1
 
 	// 1. Prepare new round struct
@@ -135,7 +139,7 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 		Time:        time.Now(),
 	}
 
-	actionsByPart := map[GamePart]map[string]int{
+	actionsByPart := map[GamePart]map[string]ActionID{
 		PartA: {},
 		PartB: {},
 	}
@@ -189,12 +193,12 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[string]int
 ////////////////////////////////////////////////////////////////////////////////
 
 // GetActions returns map of all possible actions for this Game
-func (s *State) GetActions() map[int]ActionDef {
+func (s *State) GetActions() map[ActionID]ActionDef {
 	if s.actions != nil {
 		return s.actions
 	}
 
-	s.actions = map[int]ActionDef{
+	s.actions = map[ActionID]ActionDef{
 		ACTION_NOTHING: {
 			DisplayName:  s.variant.NopName(),
 			DisplayClass: "",
@@ -203,7 +207,7 @@ func (s *State) GetActions() map[int]ActionDef {
 		ACTION_ECO: {
 			DisplayName:  s.variant.EcoName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
 				return -ECO_POLLUTION, globalState, s.variant.EcoMessage(globalState, ECO_POLLUTION)
 			},
 		},
@@ -212,7 +216,7 @@ func (s *State) GetActions() map[int]ActionDef {
 			DisplayName:  s.variant.HarvestName(),
 			DisplayClass: "",
 			check:        func(globalState int, money int) bool { return (money >= 0) },
-			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
 				// If there were inspection -> penalty
 				if inActions(ACTION_CONTROL, actions) {
 					return -HARVEST_POLLUTION, -HARVEST_PENALTY, s.variant.HarvestPenaltyMessage(HARVEST_PENALTY)
@@ -226,7 +230,7 @@ func (s *State) GetActions() map[int]ActionDef {
 		ACTION_CLEANING: {
 			DisplayName:  s.variant.CleaningName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
 				cleaning := CLEANING_ABSOLUTE
 				if globalState > 0 {
 					cleaning = cleaning - int(math.Round(float64(globalState)/float64(CLEANING_RELATIVE)))
@@ -239,7 +243,7 @@ func (s *State) GetActions() map[int]ActionDef {
 		ACTION_CONTROL: {
 			DisplayName:  s.variant.InspectionName(),
 			DisplayClass: "",
-			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
 				return 0, 0, s.variant.InspectionMessage()
 			},
 		},
@@ -248,7 +252,7 @@ func (s *State) GetActions() map[int]ActionDef {
 			DisplayName:  s.variant.EspionageName(),
 			DisplayClass: "",
 			check:        func(globalState int, money int) bool { return (money >= 0) },
-			action: func(s *State, globalState int, money int, actions map[string]int) (int, int, string) {
+			action: func(s *State, globalState int, money int, actions map[string]ActionID) (int, int, string) {
 				// If there were control -> no spionage
 				if inActions(ACTION_CONTROL, actions) {
 					return 0, -SPIONAGE_COST, s.variant.EspionageFailMessage()
@@ -270,7 +274,7 @@ func (s *State) GetActions() map[int]ActionDef {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-func inActions(action int, actions map[string]int) bool {
+func inActions(action ActionID, actions map[string]ActionID) bool {
 	for _, a := range actions {
 		if a == action {
 			return true
@@ -296,7 +300,7 @@ func (round *RoundState) getMoney(login string) int {
 	return DEFAULT_MONEY
 }
 
-func (s *State) getAction(actions map[string]int, login string) (int, ActionDef) {
+func (s *State) getAction(actions map[string]ActionID, login string) (ActionID, ActionDef) {
 	if actionID, found := actions[login]; found {
 		if action, found := s.actions[actionID]; found {
 			return actionID, action

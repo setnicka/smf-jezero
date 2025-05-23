@@ -106,7 +106,7 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 ////////////////////////////////////////////////////////////////////////////////
 
 type currentAction struct {
-	Action int
+	Action game.ActionID
 	Team   game.Team
 }
 
@@ -119,7 +119,7 @@ type orgDashboardData struct {
 	CurrentState     game.GlobalState
 	CurrentActions   []currentAction
 	History          []orgDashboardRoundRecord
-	AllActions       map[int]game.ActionDef
+	AllActions       map[game.ActionID]game.ActionDef
 	NextCountdown    int
 	HasNotifyTargets bool
 }
@@ -136,7 +136,7 @@ type orgDashboardTeamRecord struct {
 	Team       game.Team
 	Found      bool
 	StartMoney int
-	Action     int
+	Action     game.ActionID
 	FinalMoney int
 	Message    template.HTML
 }
@@ -310,13 +310,13 @@ type orgChartsData struct {
 	Teams          []game.Team
 	History        []orgDashboardRoundRecord
 	TeamStatistics map[string]orgChartsStats
-	AllActions     map[int]game.ActionDef
+	AllActions     map[game.ActionID]game.ActionDef
 }
 
 type orgChartsStats struct {
 	Team    game.Team
 	Total   int
-	Actions map[int]int
+	Actions map[game.ActionID]int
 }
 
 func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
@@ -331,7 +331,7 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 	history := s.getHistoryRecords(teams)
 	statistics := map[string]orgChartsStats{}
 	for _, team := range teams {
-		actions := map[int]int{}
+		actions := map[game.ActionID]int{}
 		for i := range s.state.GetActions() {
 			actions[i] = 0
 		}

@@ -71,7 +71,7 @@ func (s *Server) calcTeamHash(team *game.Team) string {
 
 	actions := s.state.CurrentActions
 	if action, found := actions[team.Login]; found {
-		hash = append(hash, strconv.Itoa(action))
+		hash = append(hash, strconv.Itoa(int(action)))
 	}
 	return strings.Join(hash, "-")
 }
@@ -81,7 +81,7 @@ func (s *Server) calcActionsHash() string {
 	actions := s.state.CurrentActions
 	for _, team := range s.state.Teams {
 		if action, found := actions[team.Login]; found {
-			hash = append(hash, strconv.Itoa(action))
+			hash = append(hash, strconv.Itoa(int(action)))
 		}
 	}
 	return strings.Join(hash, "-")

@@ -17,7 +17,7 @@ type teamHistoryRecord struct {
 	RoundNumber   int
 	StartState    game.GlobalState
 	StartMoney    int
-	Action        int
+	Action        game.ActionID
 	FinalState    game.GlobalState
 	FinalMoney    int
 	Message       template.HTML
@@ -35,10 +35,10 @@ type teamIndexData struct {
 	GlobalMessage  template.HTML
 	Money          int
 	GameMessage    template.HTML
-	SelectedAction int
+	SelectedAction game.ActionID
 
 	History []teamHistoryRecord
-	Actions map[int]game.ActionDef
+	Actions map[game.ActionID]game.ActionDef
 }
 
 func (s *Server) teamHashHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,7 +60,8 @@ func (s *Server) teamIndexHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if r.PostFormValue("setAction") != "" {
-			actionNumber, _ := strconv.Atoi(r.PostFormValue("setAction"))
+			actionNumberI, _ := strconv.Atoi(r.PostFormValue("setAction"))
+			actionNumber := game.ActionID(actionNumberI)
 			if action, found := s.state.GetActions()[actionNumber]; found {
 				// Check if action could be performed
 				if action.Check(currentState.GlobalState[team.Part], money) {
