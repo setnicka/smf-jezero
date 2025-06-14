@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -33,6 +34,7 @@ type Server struct {
 func New(cfg config.ServerConfig, game *game.State, variant game.Variant) *Server {
 	cookieStore := sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	cookieStore.MaxAge(cfg.SessionMaxAge)
+	cookieStore.Options.Secure = strings.HasPrefix(cfg.BaseURL, "https://")
 	//cookieStore.Options.Domain = ".fuf.me"
 
 	s := &Server{
