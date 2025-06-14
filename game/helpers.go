@@ -1,21 +1,20 @@
 package game
 
 import (
-	"crypto/rand"
-	"encoding/base64"
+	"fmt"
+	"math/rand"
 )
 
-func genRandomBytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
+var passwordChars = []rune("abcdefghijklmnopqrstuvwxyz" + "0123456789")
 
-	return b, nil
+func genRandomPassword(n int) string {
+	password := []rune{}
+	for range n {
+		password = append(password, passwordChars[rand.Intn(len(passwordChars))])
+	}
+	return string(password)
 }
 
-func genRandomString(s int) (string, error) {
-	b, err := genRandomBytes(s)
-	return base64.URLEncoding.EncodeToString(b), err
+func (t *Team) QuickLoginURL() string {
+	return fmt.Sprintf("/quick-login?l=%s&p=%s", t.Login, t.Password)
 }

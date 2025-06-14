@@ -3,11 +3,14 @@ package server
 import (
 	"fmt"
 	"html/template"
+	"image/png"
 	"net/http"
 	"sort"
 	"strconv"
 	"time"
 
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
 	"github.com/setnicka/smf-jezero/game"
 )
 
@@ -56,15 +59,21 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 		if r.PostFormValue("deleteTeam") != "" {
 			teamID := game.TeamID(r.PostFormValue("deleteTeam"))
 			if team := s.state.GetTeam(teamID); team != nil {
-				s.state.DeleteTeam(teamID)
+				s.state.DeleteTeamsByBase(team.BaseID)
 				s.setFlashMessage(w, r, FlashMessage{"success", "Team deleted"})
+			} else {
+				s.setFlashMessage(w, r, FlashMessage{"danger", "Team not found"})
 			}
-		} else if r.PostFormValue("setPassword") != "" {
+
+		} else if r.PostFormValue("setName") != "" {
 			teamID := game.TeamID(r.PostFormValue("teamID"))
 			if team := s.state.GetTeam(teamID); team != nil {
-				s.state.TeamSetPassword(teamID, r.PostFormValue("setPassword"))
-				s.setFlashMessage(w, r, FlashMessage{"success", "Password set"})
+				s.state.SetTeamName(team.BaseID, r.PostFormValue("setName"))
+				s.setFlashMessage(w, r, FlashMessage{"success", "Name for team set"})
+			} else {
+				s.setFlashMessage(w, r, FlashMessage{"danger", "Team not found"})
 			}
+
 		} else if r.PostFormValue("newTeamLogin") != "" {
 			var part game.PartID
 			switch r.PostFormValue("newTeamPart") {
@@ -72,13 +81,15 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 				part = game.PartA
 			case string(game.PartB):
 				part = game.PartB
+			case string(game.All):
+				part = game.All
 			default:
 				s.setFlashMessage(w, r, FlashMessage{"danger", fmt.Sprintf("Part '%s' is not valid game part", r.PostFormValue("newTeamPart"))})
 				http.Redirect(w, r, "teams", http.StatusSeeOther)
 				return
 			}
 
-			err := s.state.AddTeam(r.PostFormValue("newTeamLogin"), r.PostFormValue("newTeamName"), part)
+			err := s.state.AddTeam(r.PostFormValue("newTeamLogin"), part)
 			if err == nil {
 				s.setFlashMessage(w, r, FlashMessage{"success", "Team added"})
 			} else {
@@ -93,11 +104,25 @@ func (s *Server) orgTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
-			return teams[i].Name < teams[j].Name
+			return teams[i].ID < teams[j].ID
 		}
 		return teams[i].Part < teams[j].Part
 	})
 	s.executeTemplate(w, "orgTeams", orgTeamsData{
+		GeneralData: s.getGeneralData("Týmy", w, r),
+		Teams:       teams,
+	})
+}
+
+func (s *Server) orgTeamsPasswordsHandler(w http.ResponseWriter, r *http.Request) {
+	teams := s.state.GetTeams()
+	sort.Slice(teams, func(i, j int) bool {
+		if teams[i].BaseID == teams[j].BaseID {
+			return teams[i].ID < teams[j].ID
+		}
+		return teams[i].BaseID < teams[j].BaseID
+	})
+	s.executeTemplate(w, "orgTeamsPasswords", orgTeamsData{
 		GeneralData: s.getGeneralData("Týmy", w, r),
 		Teams:       teams,
 	})
@@ -273,7 +298,7 @@ func (s *Server) orgDashboardGenericHandler(template string, w http.ResponseWrit
 	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
-			return teams[i].Name < teams[j].Name
+			return teams[i].ID < teams[j].ID
 		}
 		return teams[i].Part < teams[j].Part
 	})
@@ -323,7 +348,7 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 	teams := s.state.GetTeams()
 	sort.Slice(teams, func(i, j int) bool {
 		if teams[i].Part == teams[j].Part {
-			return teams[i].Name < teams[j].Name
+			return teams[i].ID < teams[j].ID
 		}
 		return teams[i].Part < teams[j].Part
 	})
@@ -357,4 +382,21 @@ func (s *Server) orgChartsHandler(w http.ResponseWriter, r *http.Request) {
 		TeamStatistics: statistics,
 		AllActions:     s.state.GetActions(),
 	})
+}
+
+func (s *Server) orgQRCodeGen(w http.ResponseWriter, r *http.Request) {
+	text := r.FormValue("text")
+	size := 128
+	sizeS := r.FormValue("size")
+	if sizeS != "" {
+		var err error
+		if size, err = strconv.Atoi(sizeS); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	}
+
+	qrCode, _ := qr.Encode(text, qr.L, qr.Auto)
+	qrCode, _ = barcode.Scale(qrCode, size, size)
+
+	png.Encode(w, qrCode)
 }

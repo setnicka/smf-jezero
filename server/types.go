@@ -10,6 +10,7 @@ const (
 
 // GeneralData for rendering page
 type GeneralData struct {
+	BaseURL          string
 	Title            string
 	User             string
 	MessageType      string

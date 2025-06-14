@@ -13,6 +13,7 @@ import (
 
 func (s *Server) getGeneralData(title string, w http.ResponseWriter, r *http.Request) GeneralData {
 	data := GeneralData{
+		BaseURL:          s.cfg.BaseURL,
 		Title:            title,
 		CountdownActive:  !s.countdownTo.IsZero(),
 		CountdownSeconds: int(math.Ceil(s.countdownTo.Sub(time.Now()).Seconds())),

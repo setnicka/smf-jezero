@@ -8,6 +8,7 @@
 
 		"session_secret": "bojovyVlkodlakCeskePosty",
 		"session_max_age": 86400,
+		"base_url": "http://localhost:8081",
 		"listen": ":8081"
 	},
 	"game": {

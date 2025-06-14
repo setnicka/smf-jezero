@@ -7,27 +7,29 @@
 
 {{ template "part_messageBox" . }}
 
+<p><a href="teams-passwords">Zobrazit hesla</a></p>
+
 <table class="table table-striped">
 {{ $prevPart := "" }}
 {{range .Teams}}
 {{ if ne $prevPart .Part}}
 <thead>
 	<tr><th colspan="5">Part {{ .Part }}</th></tr>
-	<tr><th>ID</th><th>Login</th><th>Name</th><th colspan=2>Actions</th></tr>
+	<tr><th>ID</th><th>Login</th><th>Jméno</th><th colspan=2>Akce</th></tr>
 </thead>
 {{ $prevPart = .Part }}
 {{ end }}
 	<tr>
-		<td>{{.ID}}</td><td>{{.Login}}</td><td>{{.Name}}</td>
-		<td>{{if .Password}}🔑&nbsp;{{else}}<i><small>[not set]</small></i>{{end}}
-		<form method="post" class="form-inline">
+		<td>{{.ID}}{{if ne .ID .BaseID}}<br>({{.BaseID}}){{end}}</td>
+		<td>{{.Login}}</td><td>{{.Name}}</td>
+		<td><form method="post" class="form-inline">
 			<input type="hidden" name="teamID" value="{{.ID}}">
-			<input type="password" name="setPassword" placeholder="New password">
-			<input type="submit" class="btn btn-primary" value="Set password">
+			<input type="text" name="setName" placeholder="Nový název">
+			<input type="submit" class="btn btn-primary" value="Nastavit název">
 		</form>
 		<td><form method="post" onsubmit="return confirm('Delete the {{.Name}} team?');" class="form-inline">
 			<input type="hidden" name="deleteTeam" value="{{.ID}}">
-			<input type="submit" class="btn btn-danger" value="Delete team">
+			<input type="submit" class="btn btn-danger" value="Smazat tým">
 		</form></td>
 		</td>
 	</tr>
@@ -35,18 +37,16 @@
 </table>
 
 <h2>Přidat tým</h2>
+<p><i>Spárované týmy (varianta "obě") mají spojenou editaci názvu a mažou se také najednou.</i></p>
 <form method="post" class="form-inline">
 	<div class="form-group">
 		<label for="newTeamLogin">Login</label>
 		<input type="text" name="newTeamLogin" id="newTeamLogin" class="form-control">
 	</div>
 	<div class="form-group">
-		<label for="newTeamName">Jméno týmu</label>
-		<input type="text" name="newTeamName" id="newTeamName" class="form-control">
-	</div>
-	<div class="form-group">
 		<label for="newTeamPart">Část</label>
 		<select name="newTeamPart" id="newTeamPart" class="form-control">
+			<option value="all">obě</option>
 			<option value="A">A</option>
 			<option value="B">B</option>
 		</select>

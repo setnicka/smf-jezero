@@ -16,6 +16,7 @@ type PartID string
 const (
 	PartA PartID = "A"
 	PartB PartID = "B"
+	All   PartID = "all"
 )
 
 var allParts = []PartID{PartA, PartB}
@@ -74,10 +75,10 @@ type TeamID string
 type Team struct {
 	Part     PartID // to which part of the game team belongs
 	ID       TeamID
+	BaseID   TeamID
 	Name     string
 	Login    string
-	Salt     string
-	Password string
+	Password string // not encrypted
 }
 
 // RoundState holds global state and team states for given round

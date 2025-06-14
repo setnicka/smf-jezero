@@ -16,7 +16,8 @@ type ServerConfig struct {
 	SessionSecret string `json:"session_secret"`
 	SessionMaxAge int    `json:"session_max_age"` // seconds
 
-	Listen string `json:"listen"`
+	BaseURL string `json:"base_url"`
+	Listen  string `json:"listen"`
 }
 
 // GameConfig holds configuration for the Game logic

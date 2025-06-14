@@ -2,7 +2,6 @@
 package game
 
 import (
-	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -76,38 +75,63 @@ func (s *State) GetTeam(teamID TeamID) *Team {
 }
 
 // AddTeam adds team with given parameters (notice: password is not set)
-func (s *State) AddTeam(login string, name string, part PartID) error {
-	if s.GetTeamByLogin(login) != nil {
-		return fmt.Errorf("Team with name '%s' already exists", login)
+func (s *State) AddTeam(login string, part PartID) error {
+	newTeams := []Team{}
+
+	if part == All {
+		for _, p := range allParts {
+			partLogin := login + string(p)
+			newTeams = append(newTeams, Team{
+				ID:       TeamID(partLogin),
+				BaseID:   TeamID(login),
+				Login:    partLogin,
+				Name:     partLogin,
+				Part:     p,
+				Password: genRandomPassword(6),
+			})
+		}
+	} else {
+		newTeams = append(newTeams, Team{
+			ID:       TeamID(login),
+			BaseID:   TeamID(login),
+			Login:    login,
+			Name:     login,
+			Part:     part,
+			Password: genRandomPassword(6),
+		})
 	}
-	s.Teams = append(s.Teams, Team{ID: TeamID(login), Login: login, Name: name, Part: part})
+
+	for _, team := range newTeams {
+		if s.GetTeam(team.ID) != nil || s.GetTeamByLogin(team.Login) != nil {
+			return fmt.Errorf("Team with ID or login '%s' already exists", login)
+		}
+	}
+
+	s.Teams = append(s.Teams, newTeams...)
 	s.Save()
 	return nil
 }
 
-// DeleteTeam identified by the ID
-func (s *State) DeleteTeam(teamID TeamID) error {
-	for i, team := range s.Teams {
-		if team.ID == teamID {
-			s.Teams = append(s.Teams[:i], s.Teams[i+1:]...)
-			s.Save()
-			return nil
+// DeleteTeamsByBase deletes all teams with given baseID
+func (s *State) DeleteTeamsByBase(baseID TeamID) {
+	newTeams := []Team{}
+	for _, team := range s.Teams {
+		if team.BaseID != baseID {
+			newTeams = append(newTeams, team)
 		}
 	}
-	return fmt.Errorf("Cannot find team with ID '%s'", teamID)
+	s.Teams = newTeams
+	s.Save()
 }
 
-// TeamSetPassword sets salted password of the team
-func (s *State) TeamSetPassword(teamID TeamID, password string) {
-	team := s.GetTeam(teamID)
-	if team == nil {
-		return
+// SetTeamName sets name to all teams with given baseID
+func (s *State) SetTeamName(baseID TeamID, name string) {
+	for i := range s.Teams {
+		if s.Teams[i].BaseID == baseID {
+			s.Teams[i].Name = name
+		}
 	}
-	slog.Debug("new password set", "team", teamID)
-	team.Salt, _ = genRandomString(12)
-	team.Password = fmt.Sprintf("%x", sha256.Sum256([]byte(team.Salt+password)))
 	s.Save()
-
 }
 
 // TeamCheckLoginPassword returns true if the password matches for team with given login
@@ -116,8 +140,7 @@ func (s *State) TeamCheckLoginPassword(login string, password string) bool {
 	if team == nil {
 		return false
 	}
-	pass := fmt.Sprintf("%x", sha256.Sum256([]byte(team.Salt+password)))
-	return (pass == team.Password)
+	return (password == team.Password)
 }
 
 // Save the game state to the file specified in configuration

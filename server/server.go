@@ -97,10 +97,12 @@ func (s *Server) Start() {
 	})
 	router.HandleFunc("/org/login", s.orgLoginHandler)
 	router.HandleFunc("/org/teams", authOrg(s.orgTeamsHandler))
+	router.HandleFunc("/org/teams-passwords", authOrg(s.orgTeamsPasswordsHandler))
 	router.HandleFunc("/org/dashboard", authOrg(s.orgDashboardHandler))
 	router.HandleFunc("/org/dashboard/table", authOrg(s.orgDashboardTableHandler))
 	router.HandleFunc("/org/charts", authOrg(s.orgChartsHandler))
 	router.HandleFunc("/org/getHash", authOrg(s.orgHashHandler))
+	router.HandleFunc("/org/qr-gen", authOrg(s.orgQRCodeGen))
 
 	// Teams handlers
 	router.HandleFunc("/login", s.loginHandler)
