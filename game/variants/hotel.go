@@ -2,6 +2,7 @@ package variants
 
 import (
 	"fmt"
+	"html"
 	"strings"
 )
 
@@ -50,7 +51,7 @@ func (h *Hotel) EspionageFailMessage() string {
 func (h *Hotel) EspionageSuccessMessage(teamActions map[string]string) string {
 	results := []string{}
 	for team, action := range teamActions {
-		results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", team, action))
+		results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", html.EscapeString(team), action))
 	}
 	return fmt.Sprintf("Úspěšně jste nastražili kamery do sprch. Akce v proběhlém kole:<ul>\n%s\n</ul>", strings.Join(results, "\n"))
 }

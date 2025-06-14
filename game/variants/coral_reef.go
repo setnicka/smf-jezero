@@ -2,6 +2,7 @@ package variants
 
 import (
 	"fmt"
+	"html"
 	"strings"
 )
 
@@ -50,7 +51,7 @@ func (cr *CoralReef) EspionageFailMessage() string {
 func (cr *CoralReef) EspionageSuccessMessage(teamActions map[string]string) string {
 	results := []string{}
 	for team, action := range teamActions {
-		results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", team, action))
+		results = append(results, fmt.Sprintf("<li>%s: <b>%s</b></li>", html.EscapeString(team), action))
 	}
 	return fmt.Sprintf("Špionáž úspěšná, zjištěno:<ul>\n%s\n</ul>", strings.Join(results, "\n"))
 }
