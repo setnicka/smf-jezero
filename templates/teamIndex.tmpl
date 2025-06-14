@@ -59,7 +59,7 @@ setInterval(checkHash, 1000);
 <h2>Akce</h2>
 {{ template "part_messageBox" . }}
 
-<form method="post" id="actionsForm">
+<form method="post" id="actionsForm" autocomplete="off">
 	<div class="funkyradio">
 		{{$selectedAction := .SelectedAction}}
 		{{$money := .Money}}
