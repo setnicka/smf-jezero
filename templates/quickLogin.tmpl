@@ -1,0 +1,15 @@
+{{ define "quick_login" }}
+{{ template "part_header" . }}
+
+<div id="loginForm"><div id="loginFormInternal">
+  <h1>Přihlášení do hry</h1>
+  <form method="post" class="form-inline" action="login">
+    <input type="hidden" name="login" value="{{ .Login }}">
+    <input type="hidden" name="password" value="{{ .Password }}">
+    <button type="submit" class="btn btn-primary">Přihlásit se jako tým {{ .Team.Name }}</button>
+  </form>
+</div></div>
+
+</body>
+</html>
+{{ end }}

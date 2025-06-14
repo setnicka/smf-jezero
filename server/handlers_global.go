@@ -50,6 +50,34 @@ func (s *Server) loginHandler(w http.ResponseWriter, r *http.Request) {
 	s.executeTemplate(w, "login", data)
 }
 
+type teamQuickLoginData struct {
+	GeneralData
+	Team     game.Team
+	Login    string
+	Password string
+}
+
+func (s *Server) quickLoginHandler(w http.ResponseWriter, r *http.Request) {
+	login := r.URL.Query().Get("l")
+	password := r.URL.Query().Get("p")
+	if login == "" || password == "" {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	team := s.state.GetTeamByLogin(login)
+	if team == nil || !s.state.TeamCheckLoginPassword(login, password) {
+		s.setFlashMessage(w, r, FlashMessage{"danger", "Nesprávný login"})
+		http.Redirect(w, r, "login", http.StatusSeeOther)
+		return
+	}
+	s.executeTemplate(w, "quick_login", teamQuickLoginData{
+		GeneralData: s.getGeneralData("Přihlášení do hry", w, r),
+		Team:        *team,
+		Login:       login,
+		Password:    password,
+	})
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 func (s *Server) getGlobalHash() []string {

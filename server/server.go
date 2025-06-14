@@ -104,6 +104,7 @@ func (s *Server) Start() {
 
 	// Teams handlers
 	router.HandleFunc("/login", s.loginHandler)
+	router.HandleFunc("/quick-login", s.quickLoginHandler)
 	router.HandleFunc("/", auth(s.teamIndexHandler))
 	router.HandleFunc("/getHash", auth(s.teamHashHandler))
 
