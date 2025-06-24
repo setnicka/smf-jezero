@@ -177,14 +177,17 @@ func (s *State) calculateRound(previousRound *RoundState, actions map[TeamID]Act
 	// 3. Compare parts
 	d := math.Abs(float64(newRound.GlobalState[PartA] - newRound.GlobalState[PartB]))
 	change := int(math.Round(math.Sqrt(d*d/150 + d/5)))
+	newRound.PollutionAmount = change
 	if change > 0 && newRound.GlobalState[PartA] > newRound.GlobalState[PartB] {
 		newRound.GlobalState[PartA] -= change
 		newRound.GlobalState[PartB] += change
 		newRound.GlobalMessage = template.HTML(s.variant.GlobalMessage("A", "B", change))
+		newRound.PollutionTo = PartA
 	} else if change > 0 {
 		newRound.GlobalState[PartA] += change
 		newRound.GlobalState[PartB] -= change
 		newRound.GlobalMessage = template.HTML(s.variant.GlobalMessage("B", "A", change))
+		newRound.PollutionTo = PartB
 	}
 
 	return newRound

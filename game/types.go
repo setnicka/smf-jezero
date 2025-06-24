@@ -83,11 +83,13 @@ type Team struct {
 
 // RoundState holds global state and team states for given round
 type RoundState struct {
-	Number        int
-	GlobalState   GlobalState
-	GlobalMessage template.HTML
-	Teams         map[TeamID]teamState
-	Time          time.Time
+	Number          int
+	GlobalState     GlobalState
+	GlobalMessage   template.HTML
+	PollutionTo     PartID
+	PollutionAmount int
+	Teams           map[TeamID]teamState
+	Time            time.Time
 }
 
 // RoundNumber in human readable form (indexed from 1)

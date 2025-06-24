@@ -10,21 +10,25 @@ import (
 
 type viewStatus struct {
 	GeneralData
-	Hash          string
-	RoundNumber   int
-	GlobalState   game.GlobalState
-	GlobalMessage template.HTML
+	Hash            string
+	RoundNumber     int
+	GlobalState     game.GlobalState
+	GlobalMessage   template.HTML
+	PollutionTo     game.PartID
+	PollutionAmount int
 }
 
 func (s *Server) getViewStatusData(w http.ResponseWriter, r *http.Request) viewStatus {
 	currentState := s.state.GetLastState()
 
 	return viewStatus{
-		GeneralData:   s.getGeneralData("Přehled", w, r),
-		Hash:          s.calcGlobalHash(),
-		RoundNumber:   currentState.RoundNumber(),
-		GlobalState:   currentState.GlobalState,
-		GlobalMessage: currentState.GlobalMessage,
+		GeneralData:     s.getGeneralData("Přehled", w, r),
+		Hash:            s.calcGlobalHash(),
+		RoundNumber:     currentState.RoundNumber(),
+		GlobalState:     currentState.GlobalState,
+		GlobalMessage:   currentState.GlobalMessage,
+		PollutionTo:     currentState.PollutionTo,
+		PollutionAmount: currentState.PollutionAmount,
 	}
 }
 
