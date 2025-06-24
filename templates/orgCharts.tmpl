@@ -19,7 +19,7 @@
 {{ range .TeamStatistics }}
 {{- $total := .Total -}}
 {{- $actionCounts := .Actions}}
-<tr><th>{{ .Team.Name }}</th>
+<tr><th>{{ .Team.Name }} ({{ .Team.Part }})</th>
 	{{ range $id, $a := $.AllActions -}}
 		{{$count := index $actionCounts $id}}
 		<td>{{$count}} <small>({{percentage $count $total}})</small></td>
@@ -47,7 +47,7 @@
 			datasets: [
 			{{range $i, $team := .Teams}}
 				{
-					label: '{{$team.Part}} - {{$team.Name}}',
+					label: '{{$team.Name}} ({{$team.Part}})',
 					backgroundColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
 					borderColor: window.chartColors[colorNames[{{$i}} % colorNames.length]],
 					data: [{{range $.History}}{{(index .Teams $i).FinalMoney}},{{end}}].reverse(),
