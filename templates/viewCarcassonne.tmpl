@@ -1,0 +1,44 @@
+{{ define "viewCarcassonne" }}
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{{ .Title }}</title>
+	<link rel="stylesheet" type="text/css" href="/static/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="/static/css/carcassonne.css">
+	<link rel='shortcut icon' type='image/x-icon' href='/favicon.ico'>
+	<script src="/static/js/jquery-3.6.0.min.js"></script>
+	<script src="/static/js/global.js"></script>
+	<script src="/static/js/view-carcassonne.js"></script>
+</head>
+<body>
+
+<script type="text/javascript">
+	var hash = "{{ .Hash }}";
+</script>
+
+<div class="view">
+<div class="images">
+	<img id="img_background" src="static/images/carcassonne/background.webp">
+	<img id="cityA" src="static/images/carcassonne/city_A.webp">
+	<img id="cityB" src="static/images/carcassonne/city_B.webp">
+</div>
+<div class="counter parchment" id="counterA"><small>A</small><span id="stateA">0</span></div>
+<div class="counter parchment" id="counterB"><small>B</small><span id="stateB">0</span></div>
+<div class="info parchment">
+	<div id="round">Kolo 0</div>
+	<div id="countdown"></div>
+</div>
+<div class="parchment" id="global-message"></div>
+</div>
+
+<svg>
+	<filter id="wavy2">
+		<feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
+		<feDisplacementMap in="SourceGraphic" scale="20" />
+	</filter>
+</svg>
+
+</body>
+</html>
+{{ end }}

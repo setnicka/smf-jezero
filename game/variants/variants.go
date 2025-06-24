@@ -9,6 +9,8 @@ func Get(name string) game.Variant {
 		return NewCoralReef()
 	case "hotel":
 		return NewHotel()
+	case "small-gods":
+		return NewSmallGods()
 	}
 	return nil
 }
