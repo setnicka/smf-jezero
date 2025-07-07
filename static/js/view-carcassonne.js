@@ -1,6 +1,6 @@
 var state = {
-	"A": 0,
-	"B": 0,
+	"A": 100,
+	"B": 100,
 }
 var hash = "";
 
@@ -56,7 +56,7 @@ setInterval(checkHash, 1000);
 checkHash();
 
 // min/max for visualisation
-const cityMin = -60;
+const cityMin = -40;
 const cityMax = 150;
 
 // transforms value to 0..1 by min and max
@@ -65,10 +65,10 @@ function calcValue(value, min, max) {
 	return (valueCrop - min) / (max - min);
 }
 
-var saturationMin = 0.25;
-var saturationMax = 1.75;
-var brightnessMin = 0.75;
-var brightnessMax = 1.25;
+var saturationMin = 0.15;
+var saturationMax = 1.85;
+var brightnessMin = 0.7;
+var brightnessMax = 1.3;
 
 function setState(name, prevValue, value) {
 	var state = document.getElementById("state" + name);
@@ -79,6 +79,8 @@ function setState(name, prevValue, value) {
 	img.style.filter = `saturate(${saturation}) brightness(${brightness})`;
 
 	var duration = 3000; /* time for animation in milliseconds */
+
+	new Audio('static/sounds/gong.mp3').play();
 
 	$({countValue: prevValue}).animate(
 		{countValue: value},
