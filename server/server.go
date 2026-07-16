@@ -34,7 +34,15 @@ type Server struct {
 func New(cfg config.ServerConfig, game *game.State, variant game.Variant) *Server {
 	cookieStore := sessions.NewCookieStore([]byte(cfg.SessionSecret))
 	cookieStore.MaxAge(cfg.SessionMaxAge)
-	cookieStore.Options.Secure = strings.HasPrefix(cfg.BaseURL, "https://")
+	secure := strings.HasPrefix(cfg.BaseURL, "https://")
+	cookieStore.Options.Secure = secure
+	// gorilla/sessions v1.4.0 defaults SameSite to None, which browsers reject
+	// unless the cookie is also Secure (HTTPS). On plain HTTP (localhost) use Lax.
+	if secure {
+		cookieStore.Options.SameSite = http.SameSiteNoneMode
+	} else {
+		cookieStore.Options.SameSite = http.SameSiteLaxMode
+	}
 	//cookieStore.Options.Domain = ".fuf.me"
 
 	s := &Server{
